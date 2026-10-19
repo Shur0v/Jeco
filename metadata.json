@@ -1,0 +1,6 @@
+{
+  "name": "J&CO. Jewellery — Everyday Luxury & Minimalist Demi-Fine Jewellery",
+  "description": "Shop curated 14K solid gold, gold filled, sterling silver, flatback piercings, huggie hoops, statement rings, and personalized jewellery crafted for everyday wear.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

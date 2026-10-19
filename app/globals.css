@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --color-pure-white: #FFFFFF;
+  --color-warm-off-white: #FAF8F7;
+  --color-soft-ivory: #F8F5F2;
+  --color-blush-pink: #F6D9D9;
+  --color-dusty-rose: #E7A7AA;
+  --color-card-grey: #F6F6F6;
+  --color-charcoal: #292929;
+  --color-muted-grey: #777777;
+  --color-light-border: #EAE6E4;
+  --color-rose-Badge: #E5A4CB;
+  --color-gold-swatch: #D5C185;
+  --color-silver-swatch: #D9D9D9;
+  --color-rosegold-swatch: #E2B3A3;
+}
+
+@layer base {
+  html {
+    color: var(--color-charcoal);
+    background-color: var(--color-pure-white);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    color: #292929;
+    background-color: #FFFFFF;
+    overflow-x: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
