@@ -6,7 +6,6 @@ import {
   Star,
   Plus,
   Minus,
-  Heart,
   Sparkles,
   Tag,
   Plane,
@@ -33,12 +32,12 @@ interface ProductDetailViewProps {
   product: Product;
 }
 
-export function ProductDetailView({ product }: ProductDetailViewProps) {
+export function ProductDetailView({ product: initialProduct }: ProductDetailViewProps) {
+  const { isHydrated } = useStore();
+  const product = isHydrated ? commerceService.catalog.getProductById(initialProduct.id) || initialProduct : initialProduct;
   const {
     currency,
     addToCart,
-    toggleWishlist,
-    isInWishlist,
     trackProductView,
   } = useStore();
 
@@ -57,7 +56,6 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   const [selectedSize, setSelectedSize] = useState<string | undefined>(
     availableSizes[0]
   );
-  const [quantity, setQuantity] = useState<number>(1);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
@@ -130,16 +128,15 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     [product.id]
   );
 
-  const wishlisted = isInWishlist(product.id);
   const isAvailable = product.inStock && (activeVariant?.inStock ?? true);
 
   return (
     <div className="bg-white">
       {/* Main Top PDP Split (Matches Screenshot 4 & 5) */}
-      <div className="max-w-[1440px] mx-auto px-0 sm:px-6 lg:px-10 pt-0 sm:pt-4 pb-14">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="pdp-layout w-full mx-auto pb-14">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-start">
           {/* Left 7 cols: 2-Column Editorial Product Gallery */}
-          <div className="lg:col-span-7 grid grid-cols-2 gap-1.5">
+          <div className="pdp-gallery lg:col-span-8 grid grid-cols-2 gap-0">
             {galleryImages.map((img, idx) => (
               <button
                 key={idx}
@@ -159,7 +156,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           </div>
 
           {/* Right 5 cols: Sticky Contiguous Purchase Module */}
-          <div className="lg:col-span-5 px-5 sm:px-2 lg:sticky lg:top-20 pt-2 lg:pt-6">
+          <div className="pdp-info lg:col-span-4 px-5 sm:px-2 lg:sticky lg:top-20 pt-2 lg:pt-6">
             {/* Breadcrumbs */}
             <nav
               aria-label="Breadcrumb"
@@ -306,31 +303,9 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               </button>
             </div>
 
-            {/* Quantity + ADD TO BAG + Wishlist Row */}
+            {/* Full-width primary action, matching the reference product panel. */}
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2.5">
-                {/* Compact Quantity Stepper */}
-                <div className="flex items-center border border-[#EAE6E4] h-[44px] px-2">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    aria-label="Decrease quantity"
-                    className="p-1.5 text-[#777777] hover:text-[#292929]"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <span className="w-7 text-center text-[12.5px] tabular-nums">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-                    aria-label="Increase quantity"
-                    className="p-1.5 text-[#777777] hover:text-[#292929]"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
 
                 {/* Primary Dusty Rose ADD TO BAG Button */}
                 <button
@@ -340,7 +315,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                     addToCart(product, {
                       finish: selectedFinish,
                       size: selectedSize,
-                      quantity,
+                      quantity: 1,
                       openDrawer: true,
                     })
                   }
@@ -349,21 +324,6 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                   {isAvailable ? 'ADD TO BAG' : 'SOLD OUT'}
                 </button>
 
-                {/* Wishlist Toggle Button */}
-                <button
-                  type="button"
-                  onClick={() => toggleWishlist(product.id)}
-                  aria-label={
-                    wishlisted ? 'Remove from wishlist' : 'Add to wishlist'
-                  }
-                  className="w-[44px] h-[44px] border border-[#EAE6E4] hover:border-[#292929] flex items-center justify-center text-[#292929] transition-colors"
-                >
-                  <Heart
-                    className="w-4 h-4"
-                    fill={wishlisted ? '#E7A7AA' : 'none'}
-                    stroke={wishlisted ? '#E7A7AA' : '#292929'}
-                  />
-                </button>
               </div>
             </div>
 

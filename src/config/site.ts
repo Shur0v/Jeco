@@ -99,6 +99,27 @@ export const GOLD_14K_MEGA_MENU = {
   ],
 };
 
+export const EARRINGS_MEGA_MENU = {
+  discover: [
+    { label: 'New Arrivals', href: '/collections/new-arrivals' },
+    { label: 'Best Sellers', href: '/collections/best-sellers' },
+    { label: '14K Gold Earrings', href: '/collections/14k-gold' },
+    { label: 'Diamond', href: '/collections/diamond' },
+  ],
+  byCategoryCol1: [
+    { label: 'All Earrings', href: '/collections/earrings' },
+    { label: 'Studs', href: '/collections/studs' },
+    { label: 'Open Huggies', href: '/collections/open-huggies' },
+    { label: 'Hoop Earrings', href: '/collections/hoop-earrings' },
+  ],
+  byCategoryCol2: [
+    { label: 'Huggie Earrings', href: '/collections/huggie-earrings' },
+    { label: 'Flatback Earrings', href: '/collections/flatback' },
+    { label: 'Piercings', href: '/collections/piercings' },
+  ],
+  byMaterial: SHOP_MEGA_MENU.byMaterial,
+};
+
 export const SHIPPING_METHODS: ShippingMethod[] = [
   {
     id: 'standard',
@@ -126,10 +147,10 @@ export const SHIPPING_METHODS: ShippingMethod[] = [
 
 export const FOOTER_LINKS = {
   help: [
-    { label: 'FAQ', href: '/collections/shop-all#faq' },
-    { label: 'Shipping & Delivery', href: '/collections/shop-all#shipping' },
-    { label: 'Contact us', href: '/account' },
-    { label: 'Materials and Care', href: '/collections/14k-gold' },
+    { label: 'FAQ', href: '/pages/faq' },
+    { label: 'Shipping & Delivery', href: '/pages/shipping' },
+    { label: 'Contact us', href: '/pages/contact' },
+    { label: 'Materials and Care', href: '/pages/care' },
     { label: 'Ring Sizer', href: '/products/finger-ring-sizer-tool' },
   ],
   about: [

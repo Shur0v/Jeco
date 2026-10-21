@@ -5,6 +5,7 @@ import {
   IReviewService,
 } from '@/commerce/contracts';
 import { MOCK_PRODUCTS } from '@/mocks/products';
+import { applyCatalogUpdates } from '@/lib/admin-catalog';
 import { MOCK_COLLECTIONS } from '@/mocks/collections';
 import { MOCK_REVIEWS } from '@/mocks/reviews';
 import { MOCK_PROMO_CODES } from '@/mocks/promotions';
@@ -94,15 +95,15 @@ function applyFiltersAndSort(
 
 class MockCatalogService implements ICatalogService {
   getAllProducts(): Product[] {
-    return MOCK_PRODUCTS;
+    return applyCatalogUpdates(MOCK_PRODUCTS);
   }
 
   getProductBySlug(slug: string): Product | undefined {
-    return MOCK_PRODUCTS.find((p) => p.slug === slug);
+    return applyCatalogUpdates(MOCK_PRODUCTS).find((p) => p.slug === slug);
   }
 
   getProductById(id: string): Product | undefined {
-    return MOCK_PRODUCTS.find((p) => p.id === id);
+    return applyCatalogUpdates(MOCK_PRODUCTS).find((p) => p.id === id);
   }
 
   getProductsByIds(ids: string[]): Product[] {
@@ -141,6 +142,8 @@ class MockCatalogService implements ICatalogService {
     let base: Product[] = [];
     if (collectionSlug === 'shop-all' || collectionSlug === 'all') {
       base = MOCK_PRODUCTS;
+    } else if (collectionSlug === 'festival-sale') {
+      base = MOCK_PRODUCTS.filter(p => p.compareAtPrice !== undefined && p.compareAtPrice > p.basePrice);
     } else if (collectionSlug === 'new-arrivals') {
       base = MOCK_PRODUCTS.filter((p) => p.isNewArrival || p.collections.includes('new-arrivals'));
     } else if (collectionSlug === 'best-sellers') {
@@ -153,15 +156,26 @@ class MockCatalogService implements ICatalogService {
       );
     }
 
-    if (base.length === 0) {
+    if (base.length === 0 && collectionSlug !== 'festival-sale') {
       base = MOCK_PRODUCTS;
     }
 
-    return applyFiltersAndSort(base, filters);
+    // Preserve the reference collection's editorial product order before user sorting.
+    const featuredIds = collectionSlug === 'new-arrivals'
+      ? ['prod-easy-huggie-hoop', 'prod-dome-huggie-hoop']
+      : collectionSlug === 'shop-all'
+      ? ['prod-little-ball-huggies-hoop', 'prod-mini-hugging-hoop-pair', 'prod-pave-huggie-hoop-earrings', 'prod-little-heart-huggie-earrings', 'prod-ball-huggies-hoop-gold', 'prod-mini-bezel-huggie-earrings', 'prod-luxe-simple-huggie-earrings', 'prod-bar-open-huggies-earrings', 'prod-mini-cz-threaded-labret', 'prod-sparkly-open-huggies-earrings', 'prod-little-star-huggie-earrings', 'prod-little-opal-huggies-hoops', 'prod-little-disc-huggie-earrings', 'prod-little-endless-hoop-earrings', 'prod-conch-pave-hug-clicker-hoop', 'prod-pearl-huggies-earrings']
+      : [];
+    if (featuredIds.length) {
+      const rank = (id: string) => { const index = featuredIds.indexOf(id); return index < 0 ? featuredIds.length : index; };
+      base = [...base].sort((a,b)=>rank(a.id)-rank(b.id));
+    }
+
+    return applyFiltersAndSort(applyCatalogUpdates(base), filters);
   }
 
   searchProducts(query: string, filters?: ProductFilterState): Product[] {
-    return applyFiltersAndSort(MOCK_PRODUCTS, {
+    return applyFiltersAndSort(applyCatalogUpdates(MOCK_PRODUCTS), {
       ...filters,
       query,
     });
@@ -171,7 +185,7 @@ class MockCatalogService implements ICatalogService {
     const current = this.getProductById(productId);
     if (!current) return MOCK_PRODUCTS.slice(0, limit);
 
-    const scored = MOCK_PRODUCTS.filter((p) => p.id !== productId).map((p) => {
+    const scored = applyCatalogUpdates(MOCK_PRODUCTS).filter((p) => p.id !== productId).map((p) => {
       let score = p.popularityScore / 20;
       if (p.category === current.category) score += 10;
       if (p.material === current.material) score += 6;
@@ -222,7 +236,14 @@ class MockReviewService implements IReviewService {
 class MockPromotionService implements IPromotionService {
   validatePromoCode(code: string, subtotal: number) {
     const normalized = code.trim().toUpperCase();
-    const promo = MOCK_PROMO_CODES.find((p) => p.code === normalized);
+    let codes = MOCK_PROMO_CODES;
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = window.localStorage.getItem('jco_admin_discounts_v1');
+        if (saved) codes = JSON.parse(saved);
+      } catch {}
+    }
+    const promo = codes.find((p) => p.code === normalized);
     if (!promo) {
       return {
         valid: false,

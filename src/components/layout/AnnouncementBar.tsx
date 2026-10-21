@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SITE_CONFIG } from '@/config/site';
 
 export function AnnouncementBar() {
   const [msgIndex, setMsgIndex] = useState(0);
+  const [announcement, setAnnouncement] = useState('');
+  useEffect(() => { try { setAnnouncement(JSON.parse(localStorage.getItem('jco_admin_settings_v1') || '{}').announcement || ''); } catch {} }, []);
 
   return (
     <div
@@ -17,7 +19,7 @@ export function AnnouncementBar() {
       title="Click to view next store offer"
     >
       <p className="text-center font-normal truncate">
-        {SITE_CONFIG.announcementMessages[msgIndex]}
+        {msgIndex === 0 && announcement ? announcement : SITE_CONFIG.announcementMessages[msgIndex]}
       </p>
     </div>
   );

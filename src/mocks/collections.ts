@@ -3,6 +3,13 @@ import { getEditorialBannerSvg, getLifestyleModelSvg } from '@/lib/artwork';
 
 export const MOCK_COLLECTIONS: Collection[] = [
   {
+    id: 'col-festival-sale',
+    slug: 'festival-sale',
+    title: 'FESTIVAL SALE',
+    description: 'Discover selected jewellery with special prices. Offers are shown on each eligible piece.',
+    breadcrumbs: [{ label: 'Home', href: '/' }, { label: 'Festival Sale', href: '/collections/festival-sale' }],
+  },
+  {
     id: 'col-shop-all',
     slug: 'shop-all',
     title: 'SHOP ALL',
@@ -20,9 +27,9 @@ export const MOCK_COLLECTIONS: Collection[] = [
       'Discover our latest drops in 14K solid gold flatbacks, sculpted huggies, and ocean-inspired demi-fine treasures.',
     breadcrumbs: [{ label: 'Home', href: '/' }, { label: 'New Arrivals', href: '/collections/new-arrivals' }],
     subCollections: [
-      { id: 'sub-1', title: 'SIMPLY BOLD', slug: 'statement-rings', image: getLifestyleModelSvg(0, 'SIMPLY BOLD') },
-      { id: 'sub-2', title: 'TIED TO LOVE', slug: 'best-sellers', image: getLifestyleModelSvg(1, 'TIED TO LOVE') },
-      { id: 'sub-3', title: 'TITANIUM', slug: 'piercings', image: getLifestyleModelSvg(2, 'TITANIUM') },
+      { id: 'sub-1', title: 'SIMPLY BOLD', slug: 'statement-rings', image: 'https://www.jcojewellery.com/cdn/shop/files/W_ICONS_NEW_ARRIVALSimply_Bold.jpg?width=300' },
+      { id: 'sub-2', title: 'TIED TO LOVE', slug: 'best-sellers', image: 'https://www.jcojewellery.com/cdn/shop/files/W_ICONS_NEW_ARRIVALTied_To_Love.jpg?width=300' },
+      { id: 'sub-3', title: 'TITANIUM', slug: 'piercings', image: 'https://www.jcojewellery.com/cdn/shop/files/W_ICONS_ALL_EARRINGSTitanium.jpg?width=300' },
       { id: 'sub-4', title: 'THE OCEAN', slug: 'hoop-earrings', image: getLifestyleModelSvg(3, 'THE OCEAN') },
       { id: 'sub-5', title: 'LE JARDIN', slug: '14k-gold', image: getLifestyleModelSvg(0, 'LE JARDIN') },
     ],

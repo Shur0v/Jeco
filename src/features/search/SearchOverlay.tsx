@@ -7,10 +7,12 @@ import { Search, X, ArrowRight } from 'lucide-react';
 import { useStore } from '@/hooks/useStore';
 import { commerceService } from '@/commerce';
 import { ProductCard } from '@/components/shared/ProductCard';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
 
 export function SearchOverlay() {
   const router = useRouter();
-  const { isSearchOpen, setIsSearchOpen } = useStore();
+  const { isSearchOpen, setIsSearchOpen, isHydrated } = useStore();
+  useDialogFocus(isSearchOpen);
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
@@ -34,7 +36,7 @@ export function SearchOverlay() {
       return commerceService.catalog.getAllProducts().slice(0, 4);
     }
     return commerceService.catalog.searchProducts(debouncedQuery).slice(0, 8);
-  }, [debouncedQuery]);
+  }, [debouncedQuery, isHydrated, isSearchOpen]);
 
   if (!isSearchOpen) return null;
 

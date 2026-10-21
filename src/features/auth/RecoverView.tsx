@@ -16,8 +16,8 @@ export function RecoverView() {
 
   return (
     <div className="bg-white">
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[640px]">
-        <div className="relative bg-[#EDE3DA] min-h-[300px] lg:min-h-[640px] overflow-hidden">
+      <div className="auth-layout grid grid-cols-1 lg:grid-cols-2">
+        <div className="auth-visual relative bg-[#EDE3DA] overflow-hidden">
           <img
             src={getEditorialBannerSvg('auth-heart-hands')}
             alt="Hands forming a heart wearing delicate gold stacking rings"
@@ -27,7 +27,7 @@ export function RecoverView() {
         </div>
 
         <div className="flex flex-col items-center justify-center px-6 sm:px-12 py-14">
-          <div className="w-full max-w-[380px] text-center">
+          <div className="w-full max-w-[450px] text-center">
             <h1 className="text-[22px] sm:text-[24px] tracking-[0.12em] uppercase font-medium text-[#292929] mb-3">
               RESET PASSWORD
             </h1>
@@ -52,7 +52,7 @@ export function RecoverView() {
             ) : (
               <form onSubmit={handleRecover} className="space-y-4">
                 <input
-                  type="text"
+                  type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -74,7 +74,7 @@ export function RecoverView() {
                     Cancel
                   </Link>
                 </div>
-              </form>
+              <p className="demo-caption">Preview account · Use sample credentials only.</p></form>
             )}
           </div>
         </div>

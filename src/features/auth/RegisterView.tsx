@@ -36,9 +36,9 @@ export function RegisterView() {
 
   return (
     <div className="bg-white">
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[680px]">
+      <div className="auth-layout grid grid-cols-1 lg:grid-cols-2">
         {/* Left Editorial Heart Hands Ring Visual (Matches Screenshot 1 100%) */}
-        <div className="relative bg-[#EDE3DA] min-h-[340px] lg:min-h-[680px] overflow-hidden">
+        <div className="auth-visual relative bg-[#EDE3DA] overflow-hidden">
           <img
             src={getEditorialBannerSvg('auth-heart-hands')}
             alt="Hands forming a heart wearing delicate gold stacking rings"
@@ -49,23 +49,19 @@ export function RegisterView() {
 
         {/* Right Form Panel (Matches Screenshot 1 100%) */}
         <div className="flex flex-col items-center justify-center px-6 sm:px-12 py-14">
-          <div className="w-full max-w-[380px]">
-            <h1 className="text-[24px] sm:text-[26px] tracking-[0.12em] uppercase font-medium text-[#292929] text-center mb-6">
+          <div className="w-full max-w-[450px]">
+            <h1 className="text-[28px] sm:text-[34px] tracking-[0.04em] uppercase font-medium text-[#292929] text-center mb-6">
               CREATE AN ACCOUNT
             </h1>
 
-            <div className="mb-5 p-3 bg-[#FAF8F7] border border-[#EAE6E4] text-[11.5px] text-[#777777] text-center">
-              Demo Access — Any user ID and password will work. Do not enter
-              real credentials.
-            </div>
-
-            <form onSubmit={handleRegister} noValidate className="space-y-3.5">
+            <form onSubmit={handleRegister} className="space-y-3.5">
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="First Name"
                 aria-label="First Name"
+                required
                 className="w-full bg-[#F6F6F6] text-[#292929] placeholder-[#999999] text-[13px] px-4 py-3.5 focus:outline-none border border-transparent focus:border-[#292929]"
               />
 
@@ -75,6 +71,7 @@ export function RegisterView() {
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Last Name"
                 aria-label="Last Name"
+                required
                 className="w-full bg-[#F6F6F6] text-[#292929] placeholder-[#999999] text-[13px] px-4 py-3.5 focus:outline-none border border-transparent focus:border-[#292929]"
               />
 
@@ -91,11 +88,12 @@ export function RegisterView() {
               </div>
 
               <input
-                type="text"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 aria-label="Email"
+                required
                 className="w-full bg-[#F6F6F6] text-[#292929] placeholder-[#999999] text-[13px] px-4 py-3.5 focus:outline-none border border-transparent focus:border-[#292929]"
               />
 
@@ -105,6 +103,7 @@ export function RegisterView() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 aria-label="Password"
+                required
                 className="w-full bg-[#F6F6F6] text-[#292929] placeholder-[#999999] text-[13px] px-4 py-3.5 focus:outline-none border border-transparent focus:border-[#292929]"
               />
 
@@ -120,7 +119,7 @@ export function RegisterView() {
               >
                 CREATE ACCOUNT
               </button>
-            </form>
+            <p className="demo-caption">Preview account · Use sample credentials only.</p></form>
 
             <p className="mt-5 text-center text-[11.5px] text-[#292929]">
               Already have an account?{' '}

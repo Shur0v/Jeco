@@ -30,7 +30,7 @@ export function ReviewsSection({
 
   const allReviews = useMemo(() => {
     const base = commerceService.reviews.getReviewsForProduct(productId);
-    const combined = [...customReviews, ...base];
+    const combined = [...customReviews.filter(r => !productId || r.productId === productId), ...base];
     if (sortOrder === 'highest') {
       return [...combined].sort((a, b) => b.rating - a.rating);
     }
@@ -63,7 +63,7 @@ export function ReviewsSection({
       aria-label="Customer Reviews"
     >
       {/* Header matching Screenshots 5 & 7 */}
-      <div className="flex items-center justify-between pb-6 border-b border-[#EAE6E4]">
+      <div className="flex flex-wrap gap-4 items-center justify-between pb-6 border-b border-[#EAE6E4]">
         <div className="flex items-center gap-4">
           <h2 className="text-[20px] sm:text-[22px] tracking-[0.08em] uppercase font-medium text-[#292929]">
             REVIEWS

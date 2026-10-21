@@ -41,7 +41,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         </div>
       }
     >
-      <CollectionCatalogView slug={slug} />
+      <CollectionCatalogView key={slug} slug={slug} />
     </Suspense>
   );
 }

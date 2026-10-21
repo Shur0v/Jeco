@@ -7,6 +7,7 @@ import { CheckCircle2, Package, ShieldAlert } from 'lucide-react';
 import { useStore } from '@/hooks/useStore';
 import { DemoOrder } from '@/types/commerce';
 import { formatMoney } from '@/lib/format';
+import { PRIVATE_AREAS_ENABLED } from '@/config/features';
 
 export function CheckoutSuccessView() {
   const searchParams = useSearchParams();
@@ -50,7 +51,7 @@ export function CheckoutSuccessView() {
             Order #{order?.orderNumber || orderParam || 'JCO-104288'} Confirmed
           </h1>
           <p className="text-[13px] text-[#777777]">
-            We’ve saved this receipt to your local Demo Account history.
+            Your receipt is saved in this browser. Keep your order number for reference.
           </p>
         </div>
 
@@ -129,11 +130,11 @@ export function CheckoutSuccessView() {
             Continue Shopping
           </Link>
           <Link
-            href="/account"
+            href={PRIVATE_AREAS_ENABLED ? '/account' : '/'}
             className="w-full sm:w-auto text-center border border-[#292929] text-[#292929] hover:bg-[#292929] hover:text-white text-[11.5px] tracking-[0.14em] uppercase font-medium px-8 py-3.5 transition-colors flex items-center justify-center gap-2"
           >
             <Package className="w-4 h-4" />
-            <span>View Demo Order History</span>
+            <span>{PRIVATE_AREAS_ENABLED ? 'View Demo Order History' : 'Back to home'}</span>
           </Link>
         </div>
       </div>

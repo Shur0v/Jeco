@@ -1679,6 +1679,7 @@ const PRODUCT_SEEDS: RawProductSeed[] = [
 
 export const MOCK_PRODUCTS: Product[] = PRODUCT_SEEDS.map((seed, idx) => {
   const visualSpec: ProductVisualSpec = {
+    photoKey: seed.name,
     shape: seed.shape,
     primaryFinish: seed.finishes[0],
     enamelColor: seed.enamelColor,

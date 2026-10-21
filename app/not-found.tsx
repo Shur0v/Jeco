@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { AnnouncementBar } from '@/components/layout/AnnouncementBar';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { CartDrawer } from '@/features/cart/CartDrawer';
+import { SearchOverlay } from '@/features/search/SearchOverlay';
 
 export default function NotFound() {
   return (
@@ -31,11 +33,13 @@ export default function NotFound() {
             href="/"
             className="border border-[#292929] text-[#292929] hover:bg-[#292929] hover:text-white text-[11.5px] tracking-[0.14em] uppercase font-medium px-8 py-3.5 transition-colors"
           >
-            Return Home
+            Back to home
           </Link>
         </div>
       </main>
       <Footer />
+      <CartDrawer />
+      <SearchOverlay />
     </div>
   );
 }

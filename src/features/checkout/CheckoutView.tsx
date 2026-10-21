@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '@/hooks/useStore';
 import { SHIPPING_METHODS, SITE_CONFIG } from '@/config/site';
+import { PRIVATE_AREAS_ENABLED } from '@/config/features';
 import { DemoOrder, ShippingAddress } from '@/types/commerce';
 import {
   createDemoOrderMeta,
@@ -203,10 +204,10 @@ export function CheckoutView() {
   );
 
   return (
-    <div className="min-h-screen bg-white text-[#292929]">
+    <div className="checkout-page min-h-screen bg-white text-[#292929]">
       {/* Minimalist Checkout Header (Matches Screenshot 3) */}
       <header className="border-b border-[#EAE6E4] bg-white">
-        <div className="max-w-[1160px] mx-auto px-4 sm:px-8 h-[76px] flex items-center justify-between">
+        <div className="checkout-header-inner max-w-[1040px] mx-auto px-4 sm:px-8 h-[96px] flex items-center justify-between">
           <div className="w-8" />
           <Link href="/" className="text-center group">
             <span className="font-serif text-[28px] tracking-tight text-[#292929] block leading-none">
@@ -233,7 +234,7 @@ export function CheckoutView() {
           {/* Express Demo Checkout Bar */}
           <div className="text-center mb-6">
             <p className="text-[12px] text-[#777777] mb-3">
-              Express demo checkout (1-click auto-fill)
+              Express checkout
             </p>
             <div className="grid grid-cols-3 gap-2.5">
               <button
@@ -277,7 +278,7 @@ export function CheckoutView() {
                 >
                   Contact
                 </h2>
-                {!session ? (
+                {PRIVATE_AREAS_ENABLED && (!session ? (
                   <Link
                     href="/account/login"
                     className="text-[12.5px] text-[#E7A7AA] underline hover:text-[#292929]"
@@ -288,7 +289,7 @@ export function CheckoutView() {
                   <span className="text-[12px] text-[#777777]">
                     Logged in as {session.userId}
                   </span>
-                )}
+                ))}
               </div>
 
               <div className="relative">
@@ -600,16 +601,16 @@ export function CheckoutView() {
                   <div className="p-4 bg-[#F7F7F7] space-y-3 border-b border-[#EAE6E4]">
                     <div className="bg-white border border-[#EAE6E4] rounded-md px-3.5 py-2.5 flex items-center justify-between text-[12.5px] text-[#555555]">
                       <span>
-                        DEMO CARD PRE-AUTHORIZED · NO REAL CREDENTIALS COLLECTED
+                        4242 4242 4242 4242 · Demo card
                       </span>
                       <Lock className="w-4 h-4 text-[#777777]" />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-white border border-[#EAE6E4] rounded-md px-3.5 py-2.5 text-[12.5px] text-[#777777]">
-                        EXP: 12 / 30 (Demo)
+                        Expiration: 12 / 30
                       </div>
                       <div className="bg-white border border-[#EAE6E4] rounded-md px-3.5 py-2.5 text-[12.5px] text-[#777777]">
-                        CVV: ••• (Demo)
+                        Security code: •••
                       </div>
                     </div>
                     <label className="flex items-center gap-2 text-[12px] text-[#292929] pt-1">
@@ -653,13 +654,13 @@ export function CheckoutView() {
 
             {/* Bottom Policy Links */}
             <div className="pt-4 border-t border-[#EAE6E4] flex items-center gap-4 text-[11.5px] text-[#E7A7AA]">
-              <Link href="/collections/shop-all" className="underline">
+              <Link href="/pages/terms" className="underline">
                 Refund policy
               </Link>
-              <Link href="/collections/shop-all" className="underline">
+              <Link href="/pages/privacy" className="underline">
                 Privacy policy
               </Link>
-              <Link href="/collections/shop-all" className="underline">
+              <Link href="/pages/terms" className="underline">
                 Terms of service
               </Link>
             </div>

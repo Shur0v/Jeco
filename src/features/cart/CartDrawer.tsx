@@ -7,6 +7,7 @@ import { X, Trash2, Plus, Minus, Lock, ShoppingBag } from 'lucide-react';
 import { useStore } from '@/hooks/useStore';
 import { commerceService } from '@/commerce';
 import { formatMoney } from '@/lib/format';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
 
 export function CartDrawer() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export function CartDrawer() {
     addToCart,
   } = useStore();
 
+  useDialogFocus(isCartDrawerOpen);
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && isCartDrawerOpen) {
@@ -58,7 +60,7 @@ export function CartDrawer() {
       />
 
       {/* Right Slide-Over Panel (Matches Screenshot 4 100%) */}
-      <div className="relative z-10 w-full max-w-[440px] bg-white h-full flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200">
+      <div className="relative z-10 w-full max-w-[420px] bg-white h-full flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-200">
         {/* Top Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[#EAE6E4] flex items-center justify-between">
           <h2 className="text-[19px] tracking-[0.06em] uppercase font-medium text-[#292929]">

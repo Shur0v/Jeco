@@ -6,6 +6,8 @@ import { X, ChevronDown, ChevronRight, Search, User, Heart } from 'lucide-react'
 import { CURRENCIES, MAIN_NAV_ITEMS, SHOP_MEGA_MENU } from '@/config/site';
 import { useStore } from '@/hooks/useStore';
 import { CurrencyCode } from '@/types/commerce';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
+import { PRIVATE_AREAS_ENABLED } from '@/config/features';
 
 interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -13,6 +15,7 @@ interface MobileNavDrawerProps {
 }
 
 export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
+  useDialogFocus(isOpen);
   const { currency, setCurrency, session, setIsSearchOpen, wishlistIds } =
     useStore();
   const [expandedGroup, setExpandedGroup] = useState<string | null>('category');
@@ -20,7 +23,7 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden flex">
+    <div role="dialog" aria-modal="true" aria-label="Store navigation" className="fixed inset-0 z-50 lg:hidden flex">
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-[1px]"
         onClick={onClose}
@@ -118,7 +121,7 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
         {/* Footer Account & Currency Controls */}
         <div className="border-t border-[#EAE6E4] p-5 bg-[#FAF8F7] space-y-4">
           <div className="flex items-center justify-between">
-            <Link
+            {PRIVATE_AREAS_ENABLED && <Link
               href={session ? '/account' : '/account/login'}
               onClick={onClose}
               className="flex items-center gap-2.5 text-[13.5px] text-[#292929] font-medium"
@@ -127,10 +130,10 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
               <span>
                 {session ? `Account (${session.firstName})` : 'Log in / Register'}
               </span>
-            </Link>
+            </Link>}
 
             <Link
-              href="/account?tab=wishlist"
+              href="/wishlist"
               onClick={onClose}
               className="flex items-center gap-1.5 text-[13px] text-[#292929]"
             >

@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Instagram, Facebook, Youtube, Music2 } from 'lucide-react';
 import { FOOTER_LINKS } from '@/config/site';
 import { useStore } from '@/hooks/useStore';
+import { PRIVATE_AREAS_ENABLED } from '@/config/features';
 
 export function Footer() {
   const { subscribeNewsletter } = useStore();
+  const [storeName, setStoreName] = useState('J&CO Jewellery');
+  useEffect(() => { try { setStoreName(JSON.parse(localStorage.getItem('jco_admin_settings_v1') || '{}').storeName || 'J&CO Jewellery'); } catch {} }, []);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -28,7 +31,7 @@ export function Footer() {
 
   return (
     <footer className="bg-[#FADADD] text-[#292929] pt-14 pb-8 border-t border-[#F2C6CA]">
-      <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12">
+      <div className="w-full mx-auto px-6 sm:px-10 lg:px-[60px]">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-14">
           {/* Left Columns: HELP + SHOWROOM & ABOUT */}
           <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
@@ -117,40 +120,40 @@ export function Footer() {
             {/* Social Links Row */}
             <div className="flex items-center gap-5 mt-5 text-[#292929]">
               <a
-                href="#instagram"
-                onClick={(e) => e.preventDefault()}
+                href="https://www.instagram.com/jcojewellery/"
+                target="_blank" rel="noreferrer"
                 aria-label="Instagram"
                 className="text-[13px] font-medium hover:opacity-70 transition-opacity"
               >
                 IG
               </a>
               <a
-                href="#facebook"
-                onClick={(e) => e.preventDefault()}
+                href="https://www.facebook.com/jcojewellery/"
+                target="_blank" rel="noreferrer"
                 aria-label="Facebook"
                 className="text-[13px] font-medium hover:opacity-70 transition-opacity"
               >
                 FB
               </a>
               <a
-                href="#pinterest"
-                onClick={(e) => e.preventDefault()}
+                href="https://www.pinterest.com/jcojewellery/"
+                target="_blank" rel="noreferrer"
                 aria-label="Pinterest"
                 className="text-[13px] font-medium hover:opacity-70 transition-opacity"
               >
                 PI
               </a>
               <a
-                href="#youtube"
-                onClick={(e) => e.preventDefault()}
+                href="https://www.youtube.com/@jcojewellery"
+                target="_blank" rel="noreferrer"
                 aria-label="YouTube"
                 className="text-[13px] font-medium hover:opacity-70 transition-opacity"
               >
                 YT
               </a>
               <a
-                href="#tiktok"
-                onClick={(e) => e.preventDefault()}
+                href="https://www.tiktok.com/@jcojewellery"
+                target="_blank" rel="noreferrer"
                 aria-label="TikTok"
                 className="text-[13px] font-medium hover:opacity-70 transition-opacity"
               >
@@ -163,18 +166,18 @@ export function Footer() {
         {/* Bottom Copyright & Language Bar */}
         <div className="pt-6 border-t border-[#EFC2C6] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11.5px] text-[#292929]/85">
           <div className="flex flex-wrap items-center gap-3">
-            <span>© 2026 J&amp;CO Jewellery All Rights Reserved.</span>
-            <Link href="/collections/shop-all#privacy" className="hover:underline">
+            <span>© 2026 {storeName} All Rights Reserved.</span>
+            <Link href="/pages/privacy" className="hover:underline">
               Privacy Policy
             </Link>
             <span aria-hidden="true">|</span>
-            <Link href="/collections/shop-all#terms" className="hover:underline">
+            <Link href="/pages/terms" className="hover:underline">
               Terms &amp; Conditions
             </Link>
           </div>
 
           <div className="flex items-center gap-1 cursor-pointer">
-            <span>English</span>
+            {PRIVATE_AREAS_ENABLED && <Link href="/admin" className="mr-5 hover:underline">Admin</Link>}<span>English</span>
             <ChevronDown className="w-3.5 h-3.5 stroke-[1.5]" />
           </div>
         </div>

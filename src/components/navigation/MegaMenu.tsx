@@ -1,35 +1,50 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { SHOP_MEGA_MENU, GOLD_14K_MEGA_MENU } from '@/config/site';
-import { getLifestyleModelSvg, getProductStudioSvg } from '@/lib/artwork';
+import React from "react";
+import Link from "next/link";
+import {
+  SHOP_MEGA_MENU,
+  GOLD_14K_MEGA_MENU,
+  EARRINGS_MEGA_MENU,
+} from "@/config/site";
+import { getEditorialBannerSvg } from "@/lib/artwork";
+
+function FestivalSaleOffer({ onClose }: { onClose: () => void }) {
+  return (
+    <Link
+      href="/collections/festival-sale"
+      onClick={onClose}
+      className="festival-menu-offer"
+    >
+      <strong>Festival Sale</strong>
+      <span>Discover selected jewellery offers</span>
+      <span className="festival-menu-cta">Shop sale →</span>
+    </Link>
+  );
+}
 
 interface MegaMenuProps {
-  activeMenu: 'shop' | '14k-gold' | 'earrings' | null;
+  activeMenu: "shop" | "14k-gold" | "earrings" | null;
   onClose: () => void;
 }
 
 export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
   if (!activeMenu) return null;
 
-  const demiFineImage = getLifestyleModelSvg(0, 'DEMI-FINE');
-  const luxury14kImage = getProductStudioSvg(
-    { shape: 'pave-heart-flatback', primaryFinish: 'Yellow Gold' },
-    'Yellow Gold',
-    0,
-    '#F5F2EE'
-  );
+  const demiFineImage = getEditorialBannerSvg("demi-fine");
+  const luxury14kImage = getEditorialBannerSvg("luxury-14k");
+  const menu = activeMenu === "earrings" ? EARRINGS_MEGA_MENU : SHOP_MEGA_MENU;
 
-  if (activeMenu === '14k-gold') {
+  if (activeMenu === "14k-gold") {
     return (
       <div
-        className="w-full bg-white border-b border-[#EAE6E4] shadow-[0_14px_30px_rgba(0,0,0,0.04)] z-50 animate-in fade-in duration-150"
-        onMouseLeave={onClose}
+        className="mega-panel absolute top-full left-0 w-full bg-white border-b border-[#EAE6E4] shadow-[0_14px_30px_rgba(0,0,0,0.04)] z-50 animate-in fade-in duration-150"
+        id="store-mega-menu"
         role="region"
         aria-label="14K Gold Mega Menu"
       >
-        <div className="max-w-[1440px] mx-auto px-8 lg:px-12 py-10 grid grid-cols-12 gap-8">
+        <FestivalSaleOffer onClose={onClose} />
+        <div className="w-full mx-auto px-8 lg:px-12 py-10 grid grid-cols-12 gap-8">
           <div className="col-span-3">
             <h3 className="text-[11px] font-medium tracking-[0.12em] uppercase text-[#292929] mb-5">
               BY CATEGORY
@@ -93,12 +108,15 @@ export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
 
   return (
     <div
-      className="w-full bg-white border-b border-[#EAE6E4] shadow-[0_14px_30px_rgba(0,0,0,0.04)] z-50 animate-in fade-in duration-150"
-      onMouseLeave={onClose}
+      className="mega-panel absolute top-full left-0 w-full bg-white border-b border-[#EAE6E4] shadow-[0_14px_30px_rgba(0,0,0,0.04)] z-50 animate-in fade-in duration-150"
+      id="store-mega-menu"
       role="region"
-      aria-label="Shop Mega Menu"
+      aria-label={
+        activeMenu === "earrings" ? "Earrings Mega Menu" : "Shop Mega Menu"
+      }
     >
-      <div className="max-w-[1440px] mx-auto px-8 lg:px-12 py-8 grid grid-cols-12 gap-8 items-start">
+      <FestivalSaleOffer onClose={onClose} />
+      <div className="w-full mx-auto px-8 lg:px-12 py-8 grid grid-cols-12 gap-8 items-start">
         {/* Left Navigation Columns */}
         <div className="col-span-7 grid grid-cols-4 gap-6 pt-2">
           <div>
@@ -106,7 +124,7 @@ export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
               DISCOVER
             </h3>
             <ul className="space-y-3">
-              {SHOP_MEGA_MENU.discover.map((item) => (
+              {menu.discover.map((item) => (
                 <li key={item.label}>
                   <Link
                     href={item.href}
@@ -126,7 +144,7 @@ export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <ul className="space-y-3">
-                {SHOP_MEGA_MENU.byCategoryCol1.map((item) => (
+                {menu.byCategoryCol1.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
@@ -139,7 +157,7 @@ export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
                 ))}
               </ul>
               <ul className="space-y-3">
-                {SHOP_MEGA_MENU.byCategoryCol2.map((item) => (
+                {menu.byCategoryCol2.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
@@ -159,7 +177,7 @@ export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
               BY MATERIAL
             </h3>
             <ul className="space-y-3">
-              {SHOP_MEGA_MENU.byMaterial.map((item) => (
+              {menu.byMaterial.map((item) => (
                 <li key={item.label}>
                   <Link
                     href={item.href}

@@ -8,7 +8,7 @@ const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
-  variable: '--font-serif',
+  variable: '--font-cormorant',
   display: 'swap',
 });
 
@@ -54,6 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${cormorant.variable} ${jakarta.variable}`}
     >
       <body suppressHydrationWarning className="min-h-screen flex flex-col">

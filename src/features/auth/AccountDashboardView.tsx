@@ -1,408 +1,392 @@
-'use client';
-
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  User,
+  LayoutGrid,
   Package,
   Heart,
+  MapPin,
+  UserRound,
   LogOut,
-  Clock,
-  CheckCircle2,
-} from 'lucide-react';
-import { useStore } from '@/hooks/useStore';
-import { commerceService } from '@/commerce';
-import { ProductCard } from '@/components/shared/ProductCard';
-import { formatMoney } from '@/lib/format';
+  ArrowUpRight,
+} from "lucide-react";
+import { useStore } from "@/hooks/useStore";
+import { commerceService } from "@/commerce";
+import { ProductCard } from "@/components/shared/ProductCard";
+import { CustomerOrders } from "./CustomerOrders";
 
 export function AccountDashboardView() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const params = useSearchParams();
   const {
     session,
-    logoutDemo,
-    updateDemoProfile,
+    isHydrated,
     orders,
     wishlistIds,
     recentlyViewedIds,
-    currency,
+    updateDemoProfile,
+    logoutDemo,
   } = useStore();
-
-  const initialTab =
-    (searchParams.get('tab') as 'overview' | 'orders' | 'wishlist' | 'profile') ||
-    'overview';
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'orders' | 'wishlist' | 'profile'
-  >(initialTab);
-
-  const [firstName, setFirstName] = useState(session?.firstName || '');
-  const [lastName, setLastName] = useState(session?.lastName || '');
-  const [birthDate, setBirthDate] = useState(session?.birthDate || '');
-
-  const wishlistedProducts =
-    commerceService.catalog.getProductsByIds(wishlistIds);
-  const recentProducts =
-    commerceService.catalog.getProductsByIds(recentlyViewedIds);
-
-  if (!session) {
+  const tabs = [
+    { id: "overview", label: "Account overview", icon: LayoutGrid },
+    { id: "orders", label: "My orders", icon: Package },
+    { id: "wishlist", label: "My wishlist", icon: Heart },
+    { id: "addresses", label: "Address book", icon: MapPin },
+    { id: "profile", label: "Account details", icon: UserRound },
+  ];
+  const [tab, setTab] = useState(
+    tabs.some((t) => t.id === params.get("tab"))
+      ? params.get("tab")!
+      : "overview",
+  );
+  const saved = commerceService.catalog.getProductsByIds(wishlistIds);
+  const myOrders = orders.filter(
+    (o) =>
+      o.accountIdentifier?.toLowerCase() === session?.userId.toLowerCase() ||
+      o.shippingAddress.email.toLowerCase() === session?.email.toLowerCase(),
+  );
+  function navigate(id: string) {
+    setTab(id);
+    router.replace(`/account?tab=${id}`, { scroll: false });
+  }
+  if (!isHydrated)
     return (
-      <div className="max-w-xl mx-auto px-6 py-20 text-center space-y-5">
-        <p className="text-[11px] tracking-[0.16em] uppercase text-[#777777]">
-          DEMO ACCOUNT AREA
+      <div className="workspace-empty muted">Opening your jewellery box…</div>
+    );
+  if (!session)
+    return (
+      <div className="workspace-empty py-24">
+        <UserRound />
+        <h1 className="text-3xl font-serif">Your personal jewellery box</h1>
+        <p className="muted">
+          Sign in to manage your orders, saved pieces and account.
         </p>
-        <h1 className="font-serif text-[28px] text-[#292929]">
-          Sign in to view your J&amp;CO. Jewels Account
-        </h1>
-        <p className="text-[13px] text-[#777777]">
-          Demo Access — Any non-empty user ID and password will establish a
-          local simulated session. You can also view your local Wishlist ({wishlistIds.length} items) below.
-        </p>
-        <div className="flex items-center justify-center gap-4 pt-2">
-          <Link
-            href="/account/login"
-            className="bg-[#E7A7AA] hover:bg-[#dc9599] text-white text-[11.5px] tracking-[0.14em] uppercase font-medium px-8 py-3.5 transition-colors"
-          >
-            Log In (Demo)
-          </Link>
-          <Link
-            href="/account/register"
-            className="border border-[#292929] text-[#292929] text-[11.5px] tracking-[0.14em] uppercase font-medium px-8 py-3.5"
-          >
-            Create Account
-          </Link>
-        </div>
-
-        {wishlistedProducts.length > 0 && (
-          <div className="pt-12 text-left">
-            <h2 className="text-[14px] tracking-[0.12em] uppercase font-medium text-[#292929] mb-5">
-              YOUR SAVED WISHLIST ({wishlistedProducts.length})
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {wishlistedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </div>
-        )}
+        <Link className="rose-button" href="/account/login">
+          Log in
+        </Link>
+        <Link className="muted underline" href="/account/register">
+          Create an account
+        </Link>
       </div>
     );
-  }
-
-  function handleSaveProfile(e: React.FormEvent) {
-    e.preventDefault();
-    updateDemoProfile({
-      firstName: firstName.trim() || session!.firstName,
-      lastName: lastName.trim(),
-      birthDate: birthDate.trim(),
-    });
-  }
-
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-12">
-      {/* Top Account Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-[#EAE6E4]">
-        <div>
-          <p className="text-[11px] tracking-[0.16em] uppercase text-[#777777]">
-            DEMO CUSTOMER SESSION ACTIVE
-          </p>
-          <h1 className="text-[24px] sm:text-[28px] tracking-[0.06em] uppercase font-medium text-[#292929] mt-1">
-            Welcome, {session.firstName} ({session.userId})
-          </h1>
-        </div>
-
+    <div className="workspace customer-workspace">
+      <aside className="workspace-sidebar">
+        <p className="eyebrow">MY J&amp;CO.</p>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            className={tab === t.id ? "active" : ""}
+            onClick={() => navigate(t.id)}
+          >
+            <t.icon />
+            {t.label}
+          </button>
+        ))}
         <button
-          type="button"
           onClick={() => {
             logoutDemo();
-            router.push('/account/login');
+            router.push("/account/login");
           }}
-          className="self-start sm:self-auto inline-flex items-center gap-2 border border-[#EAE6E4] hover:border-[#292929] px-5 py-2.5 text-[11.5px] tracking-[0.12em] uppercase text-[#292929] transition-colors cursor-pointer"
         >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Log Out</span>
+          <LogOut />
+          Log out
         </button>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-6 border-b border-[#EAE6E4] py-3 mb-8 overflow-x-auto no-scrollbar">
-        {[
-          { id: 'overview', label: 'Overview', icon: User },
-          { id: 'orders', label: `Order History (${orders.length})`, icon: Package },
-          { id: 'wishlist', label: `Wishlist (${wishlistedProducts.length})`, icon: Heart },
-          { id: 'profile', label: 'Edit Demo Profile', icon: CheckCircle2 },
-        ].map((t) => {
-          const Icon = t.icon;
-          const isActive = activeTab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActiveTab(t.id as typeof activeTab)}
-              className={`flex items-center gap-2 text-[12px] tracking-[0.1em] uppercase py-1.5 border-b-2 whitespace-nowrap transition-colors ${
-                isActive
-                  ? 'border-[#292929] text-[#292929] font-medium'
-                  : 'border-transparent text-[#777777] hover:text-[#292929]'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{t.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'overview' && (
-        <div className="space-y-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Account Identifier Card */}
-            <div className="p-6 bg-[#FAF8F7] border border-[#EAE6E4] space-y-2">
-              <h2 className="text-[11.5px] tracking-[0.14em] uppercase font-medium text-[#777777]">
-                DEMO ACCOUNT DETAILS
-              </h2>
-              <p className="text-[15px] font-medium text-[#292929]">
-                {session.firstName} {session.lastName}
-              </p>
-              <p className="text-[13px] text-[#777777]">
-                Identifier: <span className="text-[#292929]">{session.userId}</span>
-              </p>
-              {session.birthDate && (
-                <p className="text-[12.5px] text-[#777777]">
-                  Birthday: {session.birthDate}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={() => setActiveTab('profile')}
-                className="text-[12px] text-[#292929] underline pt-2 inline-block"
-              >
-                Edit profile details
-              </button>
-            </div>
-
-            {/* Recent Order Summary Card */}
-            <div className="p-6 bg-[#FAF8F7] border border-[#EAE6E4] space-y-2">
-              <h2 className="text-[11.5px] tracking-[0.14em] uppercase font-medium text-[#777777]">
-                DEMO ORDERS
-              </h2>
-              <p className="text-[22px] font-medium text-[#292929] tabular-nums">
-                {orders.length}
-              </p>
-              <p className="text-[12.5px] text-[#777777]">
-                {orders.length > 0
-                  ? `Latest order #${orders[0].orderNumber}`
-                  : 'No simulated orders placed yet.'}
-              </p>
-              <button
-                type="button"
-                onClick={() => setActiveTab('orders')}
-                className="text-[12px] text-[#292929] underline pt-2 inline-block"
-              >
-                View all demo orders
-              </button>
-            </div>
-
-            {/* Wishlist Summary Card */}
-            <div className="p-6 bg-[#FAF8F7] border border-[#EAE6E4] space-y-2">
-              <h2 className="text-[11.5px] tracking-[0.14em] uppercase font-medium text-[#777777]">
-                SAVED WISHLIST
-              </h2>
-              <p className="text-[22px] font-medium text-[#292929] tabular-nums">
-                {wishlistedProducts.length}
-              </p>
-              <p className="text-[12.5px] text-[#777777]">
-                Synchronized locally across your browser session.
-              </p>
-              <button
-                type="button"
-                onClick={() => setActiveTab('wishlist')}
-                className="text-[12px] text-[#292929] underline pt-2 inline-block"
-              >
-                Manage wishlist
-              </button>
-            </div>
+      </aside>
+      <main className="workspace-content">
+        <div className="workspace-heading">
+          <div>
+            <p className="eyebrow">YOUR EVERYDAY, A LITTLE MORE SPECIAL</p>
+            <h1 className="mt-3">
+              {tab === "overview"
+                ? `Hello, ${session.firstName}`
+                : tabs.find((t) => t.id === tab)?.label}
+            </h1>
+            <p className="muted">Welcome to your personal jewellery box.</p>
           </div>
-
-          {/* Recently Viewed */}
-          {recentProducts.length > 0 && (
-            <div>
-              <h2 className="text-[14px] tracking-[0.12em] uppercase font-medium text-[#292929] mb-5 flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span>RECENTLY VIEWED PIECES</span>
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-                {recentProducts.slice(0, 4).map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-            </div>
-          )}
+          <Link className="outline-button" href="/collections/new-arrivals">
+            Keep exploring <ArrowUpRight size={14} />
+          </Link>
         </div>
-      )}
-
-      {activeTab === 'orders' && (
-        <div className="space-y-6">
-          <h2 className="text-[15px] tracking-[0.12em] uppercase font-medium text-[#292929]">
-            SIMULATED ORDER HISTORY
-          </h2>
-          {orders.length === 0 ? (
-            <div className="p-10 bg-[#FAF8F7] border border-[#EAE6E4] text-center space-y-4">
-              <p className="text-[14px] text-[#777777]">
-                You haven&apos;t placed any simulated demo orders yet.
-              </p>
-              <Link
-                href="/collections/shop-all"
-                className="inline-block bg-[#E7A7AA] text-white text-[11.5px] tracking-[0.14em] uppercase px-7 py-3 font-medium"
-              >
-                Start Shopping
+        {tab === "overview" && (
+          <>
+            <div className="workspace-welcome">
+              <div>
+                <p className="eyebrow">A LITTLE SOMETHING, JUST FOR YOU</p>
+                <h2>Made to be part of your everyday.</h2>
+                <p className="muted">
+                  Discover new favourites to stack, style and make your own.
+                </p>
+              </div>
+              <Link className="rose-button" href="/collections/new-arrivals">
+                Discover new arrivals
               </Link>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((ord) => (
-                <div
-                  key={ord.id}
-                  className="p-6 border border-[#EAE6E4] bg-white space-y-4"
+            <div className="stat-grid customer-stats">
+              {[
+                {
+                  label: "Orders placed",
+                  value: myOrders.length,
+                  target: "orders",
+                },
+                {
+                  label: "Saved favourites",
+                  value: saved.length,
+                  target: "wishlist",
+                },
+                {
+                  label: "Your addresses",
+                  value: session.defaultAddress?.address ? 1 : 0,
+                  target: "addresses",
+                },
+              ].map((s) => (
+                <button
+                  key={s.target}
+                  className="stat-card text-left"
+                  onClick={() => navigate(s.target)}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#EAE6E4]">
-                    <div>
-                      <span className="text-[13px] font-semibold text-[#292929]">
-                        Order #{ord.orderNumber}
-                      </span>
-                      <span className="text-[12px] text-[#777777] ml-3">
-                        {new Date(ord.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-[11px] uppercase tracking-wider px-2.5 py-0.5 bg-[#FAF8F7] border border-[#EAE6E4] text-[#292929]">
-                        {ord.status}
-                      </span>
-                      <span className="text-[13.5px] font-medium text-[#292929] tabular-nums">
-                        {formatMoney(ord.total, currency)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {ord.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          referrerPolicy="no-referrer"
-                          className="w-12 h-12 bg-[#F6F6F6] object-cover"
-                        />
-                        <div className="text-[12px]">
-                          <Link
-                            href={`/products/${item.slug}`}
-                            className="text-[#292929] hover:underline font-medium block"
-                          >
-                            {item.name}
-                          </Link>
-                          <span className="text-[#777777]">
-                            {item.finish} × {item.quantity}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                  <span>{s.label}</span>
+                  <strong>{s.value.toString().padStart(2, "0")}</strong>
+                  <small>View details ↗</small>
+                </button>
               ))}
             </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'wishlist' && (
-        <div>
-          <h2 className="text-[15px] tracking-[0.12em] uppercase font-medium text-[#292929] mb-6">
-            YOUR WISHLIST ({wishlistedProducts.length})
-          </h2>
-          {wishlistedProducts.length === 0 ? (
-            <div className="p-10 bg-[#FAF8F7] border border-[#EAE6E4] text-center space-y-4">
-              <p className="text-[14px] text-[#777777]">
-                Your wishlist is empty. Tap the heart icon on any piece to save
-                it here.
-              </p>
-              <Link
-                href="/collections/new-arrivals"
-                className="inline-block bg-[#E7A7AA] text-white text-[11.5px] tracking-[0.14em] uppercase px-7 py-3 font-medium"
-              >
-                Explore New Arrivals
-              </Link>
+            <div className="workspace-panel">
+              <div className="section-heading">
+                <h2>YOUR RECENT ORDERS</h2>
+                <button
+                  className="muted underline"
+                  onClick={() => navigate("orders")}
+                >
+                  View all
+                </button>
+              </div>
+              <CustomerOrders orders={myOrders.slice(0, 1)} />
             </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {wishlistedProducts.map((p) => (
+            <div className="section-heading">
+              <h2>RECENTLY ADMIRED</h2>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {commerceService.catalog
+                .getProductsByIds(recentlyViewedIds)
+                .slice(0, 4)
+                .map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+            </div>
+          </>
+        )}
+        {tab === "orders" && <CustomerOrders orders={myOrders} />}
+        {tab === "wishlist" &&
+          (saved.length ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-8">
+              {saved.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'profile' && (
-        <form
-          onSubmit={handleSaveProfile}
-          className="max-w-md space-y-4 bg-[#FAF8F7] p-6 border border-[#EAE6E4]"
-        >
-          <h2 className="text-[14px] tracking-[0.12em] uppercase font-medium text-[#292929]">
-            EDIT DEMO PROFILE
-          </h2>
-          <div>
-            <label className="block text-[11.5px] text-[#777777] mb-1">
-              Demo Account Identifier
-            </label>
-            <input
-              type="text"
-              disabled
-              value={session.userId}
-              className="w-full bg-[#EFEFEF] text-[#777777] px-3.5 py-2.5 text-[13px]"
-            />
-          </div>
-          <div>
-            <label className="block text-[11.5px] text-[#777777] mb-1">
-              First Name
-            </label>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full bg-white border border-[#EAE6E4] px-3.5 py-2.5 text-[13px]"
-            />
-          </div>
-          <div>
-            <label className="block text-[11.5px] text-[#777777] mb-1">
-              Last Name
-            </label>
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full bg-white border border-[#EAE6E4] px-3.5 py-2.5 text-[13px]"
-            />
-          </div>
-          <div>
-            <label className="block text-[11.5px] text-[#777777] mb-1">
-              Birth Date
-            </label>
-            <input
-              type="text"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              placeholder="MM/DD/YYYY"
-              className="w-full bg-white border border-[#EAE6E4] px-3.5 py-2.5 text-[13px]"
-            />
-          </div>
-          <button
-            type="submit"
-            className="bg-[#E7A7AA] hover:bg-[#dc9599] text-white text-[11.5px] tracking-[0.14em] uppercase font-medium px-6 py-3 cursor-pointer"
+          ) : (
+            <div className="workspace-empty">
+              <Heart />
+              <h2>A home for your favourites</h2>
+              <p className="muted">
+                Tap the heart on a piece you love to save it here.
+              </p>
+              <Link href="/collections/shop-all" className="rose-button">
+                Find your favourites
+              </Link>
+            </div>
+          ))}
+        {tab === "profile" && (
+          <form
+            className="workspace-panel workspace-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              updateDemoProfile({
+                firstName: String(f.get("firstName")).trim(),
+                lastName: String(f.get("lastName")).trim(),
+                birthDate: String(f.get("birthDate")),
+                phone: String(f.get("phone")),
+              });
+            }}
           >
-            Save Demo Profile
-          </button>
-        </form>
-      )}
+            <h2>PERSONAL DETAILS</h2>
+            <div className="form-pair">
+              <label>
+                First name
+                <input
+                  name="firstName"
+                  required
+                  defaultValue={session.firstName}
+                />
+              </label>
+              <label>
+                Last name
+                <input
+                  name="lastName"
+                  required
+                  defaultValue={session.lastName}
+                />
+              </label>
+            </div>
+            <label>
+              Email address
+              <input type="email" value={session.email} disabled />
+            </label>
+            <div className="form-pair">
+              <label>
+                Birthday
+                <input
+                  type="date"
+                  name="birthDate"
+                  defaultValue={session.birthDate}
+                />
+              </label>
+              <label>
+                Phone number
+                <input type="tel" name="phone" defaultValue={session.phone} />
+              </label>
+            </div>
+            <div>
+              <button className="rose-button">Save changes</button>
+            </div>
+          </form>
+        )}
+        {tab === "addresses" && (
+          <>
+            <p className="muted mb-6">
+              Your default delivery address is saved for your next visit.
+            </p>
+            <form
+              className="workspace-panel workspace-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const f = new FormData(e.currentTarget);
+                const address = Object.fromEntries(f.entries());
+                updateDemoProfile({ defaultAddress: address });
+              }}
+            >
+              <h2>
+                {session.defaultAddress?.address
+                  ? "EDIT DEFAULT ADDRESS"
+                  : "ADD A DELIVERY ADDRESS"}
+              </h2>
+              <div className="form-pair">
+                <label>
+                  First name
+                  <input
+                    name="firstName"
+                    required
+                    defaultValue={
+                      session.defaultAddress?.firstName || session.firstName
+                    }
+                  />
+                </label>
+                <label>
+                  Last name
+                  <input
+                    name="lastName"
+                    required
+                    defaultValue={
+                      session.defaultAddress?.lastName || session.lastName
+                    }
+                  />
+                </label>
+              </div>
+              <label>
+                Street address
+                <input
+                  name="address"
+                  required
+                  defaultValue={session.defaultAddress?.address}
+                />
+              </label>
+              <label>
+                Apartment, suite, etc. (optional)
+                <input
+                  name="apartment"
+                  defaultValue={session.defaultAddress?.apartment}
+                />
+              </label>
+              <div className="form-pair">
+                <label>
+                  City
+                  <input
+                    name="city"
+                    required
+                    defaultValue={session.defaultAddress?.city}
+                  />
+                </label>
+                <label>
+                  State / region
+                  <input
+                    name="state"
+                    required
+                    defaultValue={session.defaultAddress?.state}
+                  />
+                </label>
+              </div>
+              <div className="form-pair">
+                <label>
+                  Postal code
+                  <input
+                    name="postalCode"
+                    required
+                    defaultValue={session.defaultAddress?.postalCode}
+                  />
+                </label>
+                <label>
+                  Country
+                  <select
+                    name="country"
+                    defaultValue={
+                      session.defaultAddress?.country || "United States"
+                    }
+                  >
+                    {[
+                      "United States",
+                      "United Kingdom",
+                      "Canada",
+                      "Australia",
+                      "Bangladesh",
+                      "Singapore",
+                      "India",
+                      "Germany",
+                      "France",
+                    ].map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label>
+                Phone number
+                <input
+                  type="tel"
+                  name="phone"
+                  defaultValue={session.defaultAddress?.phone}
+                />
+              </label>
+              <div className="flex gap-3 flex-wrap">
+                <button className="rose-button">Save address</button>
+                {session.defaultAddress?.address && (
+                  <button
+                    type="button"
+                    className="outline-button"
+                    onClick={() => {
+                      updateDemoProfile({ defaultAddress: {} });
+                      navigate("overview");
+                    }}
+                  >
+                    Remove address
+                  </button>
+                )}
+              </div>
+            </form>
+          </>
+        )}
+      </main>
     </div>
   );
 }

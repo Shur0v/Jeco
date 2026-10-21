@@ -33,7 +33,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <article
-      className="group flex flex-col"
+      className="product-card group flex flex-col"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -123,7 +123,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="flex flex-col space-y-1">
         <Link
           href={`/products/${product.slug}`}
-          className="text-[12px] text-[#292929] hover:underline line-clamp-1 font-normal"
+          className="text-[12px] text-[#292929] hover:underline line-clamp-2 font-normal"
         >
           {product.name}
         </Link>

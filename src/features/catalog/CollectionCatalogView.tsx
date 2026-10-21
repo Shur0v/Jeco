@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
+import { useStore } from '@/hooks/useStore';
 import { commerceService } from '@/commerce';
 import {
   JewelleryMaterial,
@@ -37,6 +38,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const { isHydrated } = useStore();
   const collection = useMemo(
     () => commerceService.catalog.getCollectionBySlug(slug),
     [slug]
@@ -57,6 +59,12 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
   const [sortBy, setSortBy] = useState<SortOption>(
     (searchParams.get('sort') as SortOption) || 'featured'
   );
+  useEffect(() => {
+    setInStockOnly(searchParams.get('inStock') === 'true');
+    setSelectedMaterial(searchParams.get('material') || 'all');
+    setSelectedFinish(searchParams.get('finish') || 'all');
+    setSortBy((searchParams.get('sort') as SortOption) || 'featured');
+  }, [searchParams]);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(24);
 
@@ -68,7 +76,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
       maxPrice: maxPrice < 500 ? maxPrice : undefined,
       sortBy,
     });
-  }, [slug, inStockOnly, selectedMaterial, selectedFinish, maxPrice, sortBy]);
+  }, [slug, inStockOnly, selectedMaterial, selectedFinish, maxPrice, sortBy, isHydrated]);
 
   function syncUrlParams(next: {
     inStock?: boolean;
@@ -118,7 +126,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
     (maxPrice < 500 ? 1 : 0);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="catalog-page bg-white min-h-screen">
       {/* Collection Hero Section */}
       {collection?.heroImage && (
         <div className="relative w-full h-[260px] sm:h-[380px] lg:h-[440px] bg-[#E8DDD3] overflow-hidden">
@@ -129,7 +137,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
             className="w-full h-full object-cover"
           />
           {isOverlayHero && (
-            <div className="absolute inset-x-0 bottom-8 max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+            <div className="absolute inset-x-0 bottom-8 w-full mx-auto px-4 sm:px-8 lg:px-[60px]">
               <h1 className="text-[24px] sm:text-[32px] tracking-[0.08em] uppercase font-medium text-[#292929]">
                 {collection.title}
               </h1>
@@ -139,9 +147,9 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
       )}
 
       {/* Main Collection Container */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 pt-6 pb-12">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-[60px] pt-6 pb-12">
         {/* Breadcrumbs (Screenshot 2) */}
-        {collection?.breadcrumbs && (
+        {collection?.breadcrumbs && isOverlayHero && (
           <nav
             aria-label="Breadcrumb"
             className="flex items-center gap-2 text-[11px] text-[#777777] mb-4"
@@ -166,7 +174,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
 
         {/* Heading when not overlaid on Hero (Screenshots 5 & 6) */}
         {!isOverlayHero && (
-          <div className="my-4">
+          <div className="my-6 lg:my-10">
             <h1 className="text-[24px] sm:text-[30px] tracking-[0.08em] uppercase font-medium text-[#292929]">
               {collection?.title || slug.toUpperCase()}
             </h1>
@@ -270,6 +278,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
                   Sort By
                 </label>
                 <select
+                  aria-label="Sort products"
                   value={sortBy}
                   onChange={(e) => {
                     const nextSort = e.target.value as SortOption;
@@ -293,6 +302,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
                   Material
                 </label>
                 <select
+                  aria-label="Filter by material"
                   value={selectedMaterial}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -316,6 +326,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
                   Metal Finish
                 </label>
                 <select
+                  aria-label="Filter by metal finish"
                   value={selectedFinish}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -341,6 +352,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
                 </div>
                 <input
                   type="range"
+                  aria-label="Maximum price in USD"
                   min={30}
                   max={500}
                   step={10}
@@ -369,7 +381,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+            <div className="catalog-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
               {displayedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

@@ -1,21 +1,24 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { commerceService } from '@/commerce';
 import { SortOption } from '@/types/commerce';
 import { ProductCard } from '@/components/shared/ProductCard';
+import { useStore } from '@/hooks/useStore';
 
 export function SearchPageView() {
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q') || '';
+  const { isHydrated } = useStore();
   const [query, setQuery] = useState(initialQ);
+  useEffect(() => setQuery(initialQ), [initialQ]);
   const [sortBy, setSortBy] = useState<SortOption>('featured');
 
   const results = useMemo(
     () => commerceService.catalog.searchProducts(query, { sortBy }),
-    [query, sortBy]
+    [query, sortBy, isHydrated]
   );
 
   return (

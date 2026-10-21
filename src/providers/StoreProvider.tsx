@@ -20,6 +20,8 @@ import {
 } from '@/types/commerce';
 import { commerceService } from '@/commerce';
 import { SITE_CONFIG } from '@/config/site';
+import { hydrateCatalog } from '@/lib/admin-catalog';
+import { PRIVATE_AREAS_ENABLED } from '@/config/features';
 import { getProductStudioSvg } from '@/lib/artwork';
 
 const STORAGE_KEYS = {
@@ -96,6 +98,7 @@ interface StoreContextValue {
   // Demo Orders
   orders: DemoOrder[];
   recordDemoOrder: (order: DemoOrder) => void;
+  updateOrderStatus: (id: string, status: DemoOrder['status']) => void;
   // Custom Reviews
   customReviews: Review[];
   addCustomReview: (review: Omit<Review, 'id' | 'date' | 'helpfulCount'>) => void;
@@ -171,6 +174,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     queueMicrotask(() => {
       try {
+        hydrateCatalog();
         const savedCart = window.localStorage.getItem(STORAGE_KEYS.CART);
         if (savedCart) {
           setCartItems(JSON.parse(savedCart));
@@ -190,7 +194,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedRecent) setRecentlyViewedIds(JSON.parse(savedRecent));
 
         const savedSession = window.localStorage.getItem(STORAGE_KEYS.SESSION);
-        if (savedSession) setSession(JSON.parse(savedSession));
+        if (savedSession && PRIVATE_AREAS_ENABLED) setSession(JSON.parse(savedSession));
 
         const savedOrders = window.localStorage.getItem(STORAGE_KEYS.ORDERS);
         if (savedOrders) setOrders(JSON.parse(savedOrders));
@@ -485,12 +489,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         : trimmedId;
       const capitalized =
         namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      let profile: Partial<DemoUserSession> = {};
+      try { profile = JSON.parse(window.localStorage.getItem('jco_demo_profiles_v1') || '{}')[trimmedId.toLowerCase()] || {}; } catch {}
 
       const newSession: DemoUserSession = {
         userId: trimmedId,
         email: trimmedId,
-        firstName: capitalized,
-        lastName: 'Member',
+        firstName: profile.firstName || capitalized,
+        lastName: profile.lastName || 'Member',
+        birthDate: profile.birthDate,
+        phone: profile.phone,
+        defaultAddress: profile.defaultAddress,
         loggedInAt: new Date().toISOString(),
         isDemoSession: true,
       };
@@ -538,6 +547,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         );
       } catch {}
       showToast(`Welcome to J&CO. Jewels, ${newSession.firstName}!`);
+      try {
+        const profiles = JSON.parse(window.localStorage.getItem('jco_demo_profiles_v1') || '{}');
+        profiles[newSession.userId.toLowerCase()] = newSession;
+        window.localStorage.setItem('jco_demo_profiles_v1', JSON.stringify(profiles));
+      } catch {}
       return { success: true };
     },
     [showToast]
@@ -549,6 +563,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!prev) return prev;
         const next = { ...prev, ...updates };
         try {
+          const profiles = JSON.parse(window.localStorage.getItem('jco_demo_profiles_v1') || '{}');
+          profiles[next.userId.toLowerCase()] = next;
+          window.localStorage.setItem('jco_demo_profiles_v1', JSON.stringify(profiles));
           window.localStorage.setItem(
             STORAGE_KEYS.SESSION,
             JSON.stringify(next)
@@ -567,6 +584,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       window.localStorage.removeItem(STORAGE_KEYS.SESSION);
     } catch {}
     showToast('Signed out of demo session');
+  }, [showToast]);
+
+  const updateOrderStatus = useCallback((id: string, status: DemoOrder['status']) => {
+    setOrders(prev => {
+      const next = prev.map(order => order.id === id ? { ...order, status } : order);
+      try { window.localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(next)); } catch {}
+      return next;
+    });
+    showToast('Order status updated');
   }, [showToast]);
 
   const recordDemoOrder = useCallback((order: DemoOrder) => {
@@ -663,6 +689,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       logoutDemo,
       orders,
       recordDemoOrder,
+      updateOrderStatus,
       customReviews,
       addCustomReview,
       isSearchOpen,
@@ -704,6 +731,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       logoutDemo,
       orders,
       recordDemoOrder,
+      updateOrderStatus,
       customReviews,
       addCustomReview,
       isSearchOpen,

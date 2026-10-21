@@ -63,6 +63,7 @@ export interface ProductVariant {
 }
 
 export interface ProductVisualSpec {
+  photoKey?: string;
   shape:
     | 'dome-huggie'
     | 'easy-huggie'
