@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/hooks/useStore';
@@ -8,6 +8,7 @@ import { getEditorialBannerSvg } from '@/lib/artwork';
 
 export function LoginView() {
   const router = useRouter();
+  useEffect(() => { router.prefetch('/account'); }, [router]);
   const { loginDemo } = useStore();
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +24,7 @@ export function LoginView() {
       );
       return;
     }
-    router.push('/account');
+    router.replace('/account');
   }
 
   return (

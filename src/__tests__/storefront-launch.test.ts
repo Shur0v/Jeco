@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { middleware } from "../../middleware";
 import { commerceService } from "../commerce";
 
-describe("storefront-only launch", () => {
+describe("storefront and dashboard launch", () => {
   it.each([
     "/admin",
     "/admin/products",
@@ -15,15 +15,14 @@ describe("storefront-only launch", () => {
     "/account/addresses",
     "/dashboard/settings",
   ])(
-    "returns a 404 for %s while retaining the implementation for later",
+    "allows %s through to the enabled account and dashboard routes",
     (path) => {
       const response = middleware(
         new NextRequest(`https://example.com${path}?tab=orders`),
       );
-      expect(response.status).toBe(404);
-      expect(response.headers.get("x-middleware-rewrite")).toBe(
-        "https://example.com/unavailable",
-      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+      expect(response.headers.get("x-middleware-next")).toBe("1");
     },
   );
   it.each([

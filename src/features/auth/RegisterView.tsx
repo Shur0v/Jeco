@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Calendar } from 'lucide-react';
@@ -9,6 +9,7 @@ import { getEditorialBannerSvg } from '@/lib/artwork';
 
 export function RegisterView() {
   const router = useRouter();
+  useEffect(() => { router.prefetch('/account'); }, [router]);
   const { registerDemo } = useStore();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -31,7 +32,7 @@ export function RegisterView() {
       setError(res.error || 'Please complete required fields.');
       return;
     }
-    router.push('/account');
+    router.replace('/account');
   }
 
   return (
@@ -54,7 +55,7 @@ export function RegisterView() {
               CREATE AN ACCOUNT
             </h1>
 
-            <form onSubmit={handleRegister} className="space-y-3.5">
+            <form onSubmit={handleRegister} noValidate className="space-y-3.5">
               <input
                 type="text"
                 value={firstName}

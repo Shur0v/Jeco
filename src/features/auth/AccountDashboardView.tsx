@@ -1,7 +1,6 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   LayoutGrid,
   Package,
@@ -15,10 +14,18 @@ import { useStore } from "@/hooks/useStore";
 import { commerceService } from "@/commerce";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { CustomerOrders } from "./CustomerOrders";
+import { useDashboardNavigation } from "@/hooks/useDashboardNavigation";
+
+const ACCOUNT_TABS = [
+  "overview",
+  "orders",
+  "wishlist",
+  "addresses",
+  "profile",
+] as const;
 
 export function AccountDashboardView() {
   const router = useRouter();
-  const params = useSearchParams();
   const {
     session,
     isHydrated,
@@ -35,11 +42,7 @@ export function AccountDashboardView() {
     { id: "addresses", label: "Address book", icon: MapPin },
     { id: "profile", label: "Account details", icon: UserRound },
   ];
-  const [tab, setTab] = useState(
-    tabs.some((t) => t.id === params.get("tab"))
-      ? params.get("tab")!
-      : "overview",
-  );
+  const [tab, navigateTab] = useDashboardNavigation(ACCOUNT_TABS, "overview");
   const saved = commerceService.catalog.getProductsByIds(wishlistIds);
   const myOrders = orders.filter(
     (o) =>
@@ -47,8 +50,9 @@ export function AccountDashboardView() {
       o.shippingAddress.email.toLowerCase() === session?.email.toLowerCase(),
   );
   function navigate(id: string) {
-    setTab(id);
-    router.replace(`/account?tab=${id}`, { scroll: false });
+    if (ACCOUNT_TABS.includes(id as (typeof ACCOUNT_TABS)[number])) {
+      navigateTab(id as (typeof ACCOUNT_TABS)[number]);
+    }
   }
   if (!isHydrated)
     return (

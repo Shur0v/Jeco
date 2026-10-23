@@ -27,6 +27,9 @@ import {
 } from "@/lib/admin-catalog";
 import { DemoOrder, PromoCode } from "@/types/commerce";
 import { useDialogFocus } from "@/hooks/useDialogFocus";
+import { useDashboardNavigation } from '@/hooks/useDashboardNavigation';
+
+const ADMIN_TABS = ['overview', 'orders', 'products', 'customers', 'discounts', 'settings'] as const;
 
 type Tab =
   "overview" | "orders" | "products" | "customers" | "discounts" | "settings";
@@ -67,7 +70,7 @@ export function AdminDashboard() {
     showToast,
     updateOrderStatus,
   } = useStore();
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, navigateTab] = useDashboardNavigation(ADMIN_TABS, 'overview');
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
@@ -163,7 +166,7 @@ export function AdminDashboard() {
     return [...map.values()];
   }, [orders, session, subscribedEmails]);
   function navigate(id: Tab) {
-    setTab(id);
+    navigateTab(id);
     setQuery("");
     setFilter("all");
     setPage(0);

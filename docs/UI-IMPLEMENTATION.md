@@ -2,9 +2,11 @@
 
 ## Current launch mode
 
-Only the storefront is enabled. `src/config/features.ts` keeps `PRIVATE_AREAS_ENABLED` set to `false`. Middleware returns HTTP 404 for `/admin`, `/account`, `/dashboard` and their nested paths, using the branded not-found screen with **Back to home**. Desktop/mobile account links, the footer admin link, checkout sign-in and order-history links are disconnected. Existing saved account data is retained but is not loaded into the storefront session. Guest checkout and the browser wishlist remain available.
+The storefront, customer dashboard and merchant dashboard are enabled. `src/config/features.ts` sets `PRIVATE_AREAS_ENABLED` to `true`, reconnecting the storefront account icon, mobile login/registration link, footer admin link and checkout account links. `/account` and `/admin` are the dashboard entry points; unrelated or nonexistent routes still return the branded 404 page.
 
-The account screens and complete merchant dashboard implementation are preserved for later activation. To reconnect them later, enable the shared flag after the intended backend services and access controls are ready.
+Login accepts any nonempty mock identifier and password. Registration accepts mock names, an identifier/email and password without requiring a real email address. Both forms immediately replace the auth route with `/account`. These remain browser-local preview sessions, not production authentication.
+
+Both dashboards render their panels from already-loaded React components. `src/hooks/useDashboardNavigation.ts` updates the `?tab=` query with the native History API, integrated with Next.js `useSearchParams`, without a document reload or server-component navigation. Direct tab links, refresh and browser Back/Forward preserve the selected panel. Examples: `/account?tab=orders`, `/account?tab=profile`, `/admin?tab=products`, `/admin?tab=settings`.
 
 Desktop mega menus share one pointer region with a short close delay, keyboard access, Escape dismissal, backdrop dismissal and route-change cleanup. The pink Festival Sale option appears only within an open dropdown, without a permanent sale bar or a layout shift. Its collection uses existing products whose original prices exceed their current prices. Existing collection load-more increments, sorting and filters are unchanged.
 

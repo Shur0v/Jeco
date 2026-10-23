@@ -1,5 +1,5 @@
-// Enable together when the account and merchant areas are ready to launch.
-export const PRIVATE_AREAS_ENABLED = false;
+// Mock account and merchant dashboard previews are enabled together.
+export const PRIVATE_AREAS_ENABLED = true;
 
 export function isPrivateAreaPath(pathname: string): boolean {
   return /^\/(?:admin|account|dashboard)(?:\/|$)/.test(pathname);
