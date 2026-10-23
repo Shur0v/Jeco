@@ -1036,6 +1036,450 @@ footer > div > div:first-child {
   }
 }
 
+/* Customer account: storefront colours, clearer type and purposeful feedback. */
+.customer-workspace {
+  grid-template-columns: 250px minmax(0, 1fr);
+  background: #fdfbf9;
+  color: #302c2a;
+}
+.customer-workspace .workspace-sidebar {
+  background: #fff;
+  padding: 32px 20px;
+}
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 4px 30px;
+  min-width: 0;
+}
+.account-avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #f6dedd;
+  color: #694541;
+  font-family: Georgia, serif;
+  font-size: 24px;
+}
+.account-identity .eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+}
+.account-identity strong {
+  display: block;
+  font-weight: 600;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.account-identity div > span {
+  display: block;
+  font-size: 11px;
+  color: #69605b;
+  margin-top: 3px;
+}
+.customer-workspace .workspace-sidebar nav {
+  display: grid;
+  gap: 6px;
+}
+.customer-workspace .workspace-sidebar button,
+.customer-workspace .workspace-sidebar > a {
+  min-height: 48px;
+  font-size: 14px;
+  color: #615750;
+  border-radius: 6px;
+  transition:
+    background 180ms,
+    color 180ms;
+}
+.customer-workspace .workspace-sidebar button.active {
+  background: #f8e3e1;
+  color: #49332f;
+  font-weight: 600;
+  box-shadow: inset 3px 0 #b16b67;
+}
+.customer-workspace .workspace-sidebar svg {
+  width: 19px;
+  height: 19px;
+}
+.customer-workspace .workspace-sidebar .account-shop-link {
+  margin-top: 32px;
+  border-top: 1px solid #eee5df;
+  border-radius: 0;
+  padding-top: 24px;
+}
+.account-nav-count {
+  margin-left: auto;
+  background: #fff;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.customer-workspace .workspace-content {
+  max-width: 1440px;
+  width: 100%;
+  margin-inline: auto;
+  padding: 38px clamp(24px, 3vw, 56px) 64px;
+}
+.customer-workspace .workspace-heading {
+  margin-bottom: 28px;
+}
+.customer-workspace h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(30px, 2.6vw, 40px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.customer-workspace h2 {
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+}
+.customer-workspace .muted {
+  color: #6a605b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.customer-workspace .eyebrow {
+  color: #79615a;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+}
+.customer-workspace .rose-button,
+.customer-workspace .outline-button {
+  font-size: 12px;
+  min-height: 46px;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.customer-workspace .rose-button {
+  background: #e8aaa8;
+  border-color: #e8aaa8;
+  color: #442c29;
+}
+.customer-workspace .rose-button:hover {
+  background: #df9997;
+}
+.customer-workspace .outline-button:hover {
+  background: #faf0ec;
+  border-color: #b89a8c;
+}
+.customer-workspace :is(button, a, input, select):focus-visible {
+  outline: 2px solid #9c5c57;
+  outline-offset: 4px;
+}
+.customer-workspace .workspace-welcome {
+  background: #f6e7e1;
+  padding: 28px 32px;
+  border: 1px solid #efddd6;
+  border-radius: 8px;
+  margin-bottom: 22px;
+}
+.customer-workspace .workspace-welcome .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.customer-workspace .workspace-welcome h2 {
+  font-family: Georgia, serif;
+  font-size: clamp(23px, 2vw, 30px);
+  font-weight: 400;
+}
+.customer-workspace .workspace-welcome p {
+  max-width: 490px;
+}
+.customer-workspace .workspace-welcome > a {
+  flex-shrink: 0;
+}
+.customer-workspace .customer-stats {
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.customer-workspace .stat-card {
+  padding: 22px;
+  border-radius: 8px;
+  border-color: #e8ded7;
+  transition:
+    border-color 180ms,
+    transform 180ms,
+    box-shadow 180ms;
+}
+.customer-workspace .stat-card:hover {
+  border-color: #c89b90;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 18px #6a46320a;
+}
+.customer-workspace .stat-card .account-stat-label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #60564f;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.customer-workspace .stat-card strong {
+  margin: 14px 0 12px;
+  font-size: 34px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.customer-workspace .stat-card small {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #87514d;
+  font-size: 12px;
+}
+.account-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  gap: 22px;
+  margin-bottom: 32px;
+}
+.customer-workspace .workspace-panel {
+  border-radius: 8px;
+  border-color: #e8ded7;
+  padding: 26px;
+}
+.account-overview-grid > .workspace-panel {
+  margin-bottom: 0;
+}
+.customer-workspace .section-heading {
+  gap: 16px;
+}
+.customer-workspace .section-heading button,
+.account-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #87514d;
+  font-size: 13px;
+  text-decoration: none;
+  min-height: 40px;
+}
+.account-orders-panel .workspace-empty {
+  padding: 24px 16px 14px;
+  gap: 12px;
+}
+.customer-workspace .workspace-empty svg {
+  color: #956e5e;
+  stroke-width: 1.4;
+}
+.account-orders-panel .workspace-empty h2 {
+  font-size: 18px;
+}
+.account-orders-panel .workspace-empty p {
+  max-width: 330px;
+}
+.account-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: #faf0eb;
+  color: #87514d;
+  border-radius: 50%;
+  margin-bottom: 14px;
+}
+.account-details-card > .muted {
+  margin-top: 8px;
+}
+.account-checklist {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+  padding: 0;
+  list-style: none;
+}
+.account-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #60564f;
+}
+.account-checklist svg {
+  flex-shrink: 0;
+  color: #87514d;
+}
+.account-details-card .outline-button {
+  width: 100%;
+}
+.account-pieces > .section-heading {
+  margin-bottom: 18px;
+}
+.account-pieces h2 {
+  font-family: Georgia, serif;
+  font-size: 27px;
+  margin-top: 5px;
+}
+.account-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.customer-workspace .product-card {
+  min-width: 0;
+}
+.customer-workspace .product-card :is(a, p) {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.customer-workspace .product-card button[aria-label*="wishlist"],
+.customer-workspace .product-card button[aria-label^="Quick add"] {
+  opacity: 1;
+}
+.customer-workspace .workspace-form {
+  max-width: 800px;
+  gap: 22px;
+}
+.customer-workspace .workspace-form label {
+  font-size: 14px;
+  color: #51473f;
+}
+.customer-workspace .workspace-form :is(input, select) {
+  font-size: 16px;
+  border-color: #d9cdc5;
+  min-height: 48px;
+  border-radius: 4px;
+}
+.customer-workspace .workspace-form input:disabled {
+  background: #f5f1ed;
+  color: #75665d;
+}
+.account-feedback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #edf2e9;
+  border: 1px solid #d5decf;
+  padding: 14px 18px;
+  color: #42533b;
+  font-size: 14px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+.account-tab-content {
+  animation: account-enter 180ms ease-out;
+}
+@keyframes account-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 1150px) {
+  .customer-workspace {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .customer-workspace .workspace-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .account-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .customer-workspace .stat-card {
+    padding: 18px 14px;
+  }
+}
+@media (max-width: 767px) {
+  .customer-workspace {
+    display: block;
+  }
+  .customer-workspace .workspace-sidebar {
+    display: block;
+    padding: 16px 16px 12px;
+    overflow: visible;
+  }
+  .account-identity {
+    margin: 0 0 14px;
+  }
+  .account-identity .eyebrow {
+    display: block;
+  }
+  .customer-workspace .workspace-sidebar nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 4px 3px 8px;
+    scrollbar-width: thin;
+  }
+  .customer-workspace .workspace-sidebar nav button {
+    font-size: 13px;
+    padding: 12px;
+    gap: 8px;
+  }
+  .customer-workspace .workspace-sidebar > :is(button, a) {
+    display: inline-flex;
+    margin: 6px 10px 0 0;
+    padding: 8px;
+    min-height: 40px;
+    font-size: 12px;
+    border: 0;
+  }
+  .customer-workspace .workspace-content {
+    padding: 26px 16px 48px;
+  }
+  .customer-workspace .workspace-heading {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .customer-workspace .workspace-heading > .outline-button {
+    font-size: 11px;
+    padding: 10px 14px;
+  }
+  .customer-workspace .workspace-welcome {
+    padding: 24px;
+  }
+  .customer-workspace .customer-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .customer-workspace .stat-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 16px 18px;
+  }
+  .customer-workspace .stat-card strong {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    margin: 0;
+    font-size: 29px;
+  }
+  .customer-workspace .stat-card small {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+  .customer-workspace .workspace-panel {
+    padding: 22px;
+  }
+  .account-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 12px;
+  }
+  .customer-workspace .workspace-form .form-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
 @layer base {
   html {
     color: var(--color-charcoal);
