@@ -43,7 +43,6 @@ export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
         role="region"
         aria-label="14K Gold Mega Menu"
       >
-        <FestivalSaleOffer onClose={onClose} />
         <div className="w-full mx-auto px-8 lg:px-12 py-10 grid grid-cols-12 gap-8">
           <div className="col-span-3">
             <h3 className="text-[11px] font-medium tracking-[0.12em] uppercase text-[#292929] mb-5">
@@ -115,7 +114,6 @@ export function MegaMenu({ activeMenu, onClose }: MegaMenuProps) {
         activeMenu === "earrings" ? "Earrings Mega Menu" : "Shop Mega Menu"
       }
     >
-      <FestivalSaleOffer onClose={onClose} />
       <div className="w-full mx-auto px-8 lg:px-12 py-8 grid grid-cols-12 gap-8 items-start">
         {/* Left Navigation Columns */}
         <div className="col-span-7 grid grid-cols-4 gap-6 pt-2">

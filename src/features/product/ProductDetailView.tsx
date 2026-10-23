@@ -44,6 +44,8 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
   const [selectedFinish, setSelectedFinish] = useState<MetalFinish>(
     product.availableFinishes[0]
   );
+  const [personalText,setPersonalText]=useState('');
+  const personalization=(product as import('@/lib/merchant-store').MerchantProduct).personalization;
 
   const availableSizes = useMemo(() => {
     const set = new Set<string>();
@@ -76,6 +78,7 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
 
   // Build 7-tile gallery matching Screenshot 5
   const galleryImages = useMemo(() => {
+    if(product.visualSpec.customImage) return product.images.map((src,i)=>({src,alt:(product as import('@/lib/merchant-store').MerchantProduct).imageAlt?.[i]||product.name}));
     const studioMain = getProductStudioSvg(
       product.visualSpec,
       selectedFinish,
@@ -131,7 +134,7 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
   const isAvailable = product.inStock && (activeVariant?.inStock ?? true);
 
   return (
-    <div className="bg-white">
+    <div className="bg-white" data-product-id={product.id}>
       {/* Main Top PDP Split (Matches Screenshot 4 & 5) */}
       <div className="pdp-layout w-full mx-auto pb-14">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-start">
@@ -142,7 +145,7 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
                 key={idx}
                 type="button"
                 onClick={() => setLightboxIndex(idx)}
-                className="group relative aspect-square bg-[#F6F6F6] overflow-hidden block cursor-zoom-in focus:outline-none"
+                className={`group relative aspect-square bg-[#F6F6F6] overflow-hidden block cursor-zoom-in focus:outline-none ${galleryImages.length===1?'col-span-2':''}`}
                 aria-label={`Zoom image ${idx + 1}: ${img.alt}`}
               >
                 <img
@@ -305,18 +308,21 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
 
             {/* Full-width primary action, matching the reference product panel. */}
             <div className="mt-4 space-y-3">
+              {personalization?.enabled&&<label className="block text-sm">{personalization.instructions||'Make it yours'}<input className="block w-full border border-[#e8d8d0] px-3 py-3 mt-2" maxLength={personalization.limit} value={personalText} onChange={e=>setPersonalText(e.target.value)} placeholder="Your personalization"/><small>{personalText.length}/{personalization.limit}</small></label>}
               <div className="flex items-center gap-2.5">
 
                 {/* Primary Dusty Rose ADD TO BAG Button */}
                 <button
                   type="button"
                   disabled={!isAvailable}
+                  aria-label={`Add ${product.name} to bag`}
                   onClick={() =>
                     addToCart(product, {
                       finish: selectedFinish,
                       size: selectedSize,
                       quantity: 1,
                       openDrawer: true,
+                      giftNote:personalization?.enabled?personalText:undefined,
                     })
                   }
                   className="flex-1 h-[44px] bg-[#E7A7AA] hover:bg-[#dc9599] disabled:bg-[#CCCCCC] text-white text-[11.5px] tracking-[0.14em] uppercase font-medium transition-colors cursor-pointer"
@@ -402,7 +408,7 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
                   <div className="pb-4 text-[12.5px] text-[#777777] space-y-2 leading-relaxed">
                     <p>
                       • Complimentary Standard Tracked Shipping on all orders
-                      $60 USD+.
+                      ৳6,000+.
                     </p>
                     <p>
                       • Orders dispatch within 1–2 business days in signature
@@ -462,7 +468,7 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
           <div className="aspect-square bg-[#F6F6F6] overflow-hidden">
             <img
-              src={galleryImages[1].src}
+              src={(galleryImages[1]||galleryImages[0]).src}
               alt="As seen on Instagram"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"

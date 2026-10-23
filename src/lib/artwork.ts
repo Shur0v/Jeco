@@ -13,6 +13,7 @@ export function getProductStudioSvg(
   _viewIndex = 0,
   _bgHex?: string,
 ): string {
+  if (spec.customImage) return spec.customImage;
   const finish = finishOverride || spec.primaryFinish;
   const finishPhotos =
     (spec.photoKey && finishes[spec.photoKey]) || finishes[spec.shape];

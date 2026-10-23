@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { HomeSection, HomeMedia, useHomeContent } from "./home-content";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { commerceService } from "@/commerce";
@@ -89,10 +90,25 @@ function ProductRow({
 }
 
 export function HomepageView() {
+  const home = useHomeContent();
+  const [slide, setSlide] = useState(0);
+  const heroSlides = [home.id("hero").media, ...(home.id("hero").slides || [])];
+  useEffect(() => {
+    if (
+      heroSlides.length < 2 ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    const timer = setInterval(
+      () => setSlide((s) => (s + 1) % heroSlides.length),
+      6000,
+    );
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
   const { isHydrated } = useStore();
   const all = useMemo(
     () => commerceService.catalog.getAllProducts(),
-    [isHydrated],
+    [isHydrated, home.data],
   );
   const categories = [
     ["STUDS", "studs", photos.studs],
@@ -107,102 +123,152 @@ export function HomepageView() {
   const heart = all.find((p) => p.visualSpec.shape === "pave-heart-flatback")!;
   return (
     <div className="home-page">
-      <section
-        className="campaign-hero"
-        aria-label="Your everyday earrings, sorted"
-      >
-        <Link href="/collections/flatback" aria-label="Find your flatbacks">
-          <img
-            src={photos.hero}
-            alt="Your everyday earrings, sorted. Secure and comfortable 24/7. Find your flatbacks."
-            fetchPriority="high"
+      <HomeSection id="hero" className="campaign-hero">
+        <Link href={home.id("hero").href} aria-label="Find your flatbacks">
+          <HomeMedia
+            block={{
+              ...home.id("hero"),
+              media: heroSlides[slide] || heroSlides[0],
+            }}
           />
         </Link>
-      </section>
-      <section className="home-category">
+        {heroSlides.length > 1 && (
+          <div className="home-slide-controls">
+            {heroSlides.map((_, i) => (
+              <button
+                aria-label={`Hero slide ${i + 1}`}
+                aria-pressed={slide === i}
+                key={i}
+                onClick={() => setSlide(i)}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
+      </HomeSection>
+      <HomeSection id="categories" className="home-category">
         <h2>CATEGORY</h2>
         <div className="category-grid">
           {categories.map(([label, slug, image]) => (
-            <Link key={slug} href={`/collections/${slug}`}>
-              <img src={image} alt={label} loading="lazy" />
-              <span>{label}</span>
-            </Link>
+            <HomeSection key={slug} id={`tile-${slug}`}>
+              <Link
+                href={home.id(`tile-${slug}`).href || `/collections/${slug}`}
+              >
+                <HomeMedia block={home.id(`tile-${slug}`)} />
+                <span>{home.id(`tile-${slug}`).title || label}</span>
+              </Link>
+            </HomeSection>
           ))}
         </div>
-      </section>
+      </HomeSection>
       <section className="home-gifting">
         <h2>GIFTING</h2>
         <div className="gifting-grid">
-          <Link href="/collections/personalized">
-            <img
-              src={photos.giftingLeft}
-              alt="Gold birth flower necklaces, a meaningful gift"
-              loading="lazy"
-            />
-            <span>PERSONALIZED</span>
-          </Link>
-          <Link href="/collections/handmade">
-            <img
-              src={photos.giftingRight}
-              alt="Handmade pearl and gold jewellery"
-              loading="lazy"
-            />
-            <span>HANDMADE</span>
-          </Link>
+          {["gifting-left", "gifting-right"].map((id) => (
+            <HomeSection key={id} id={id}>
+              <Link href={home.id(id).href}>
+                <HomeMedia block={home.id(id)} />
+                <span>{home.id(id).title}</span>
+              </Link>
+            </HomeSection>
+          ))}
         </div>
       </section>
-      <ProductRow
-        title="NEW ARRIVALS"
-        tabs={["Piercing", "14K Gold", "Earrings", "All"]}
-        products={all.filter((p) => p.isNewArrival)}
-        href="/collections/new-arrivals"
-      />
-      <section className="heart-spotlight" id="story">
-        <Link href={`/products/${heart.slug}`}>
-          <img
-            src={getProductStudioSvg(heart.visualSpec)}
-            alt="Discover our signature pavé heart flatback"
-            loading="lazy"
-          />
+      <HomeSection id="new-arrivals">
+        <ProductRow
+          title="NEW ARRIVALS"
+          tabs={["Piercing", "14K Gold", "Earrings", "All"]}
+          products={
+            home.id("new-arrivals").mode === "manual"
+              ? all.filter((p) =>
+                  home.id("new-arrivals").productIds?.includes(p.id),
+                )
+              : all.filter((p) =>
+                  home.id("new-arrivals").source === "featured"
+                    ? p.isFeatured
+                    : home.id("new-arrivals").source === "best-sellers"
+                      ? p.isBestSeller
+                      : p.isNewArrival,
+                )
+          }
+          href="/collections/new-arrivals"
+        />
+      </HomeSection>
+      <HomeSection className="heart-spotlight" id="above-marquee">
+        <Link href={home.id("above-marquee").href}>
+          <HomeMedia block={home.id("above-marquee")} />
         </Link>
-      </section>
-      <div className="value-ticker">
-        <span>GENTLE ON SENSITIVE SKIN</span>
-        <span>POKE-FREE COMFORT</span>
-        <span>14K SOLID GOLD</span>
-        <span>MADE FOR YOUR EVERYDAY</span>
-        <span>WORLDWIDE SHIPPING</span>
-      </div>
-      <Link className="editorial-interlude" href="/collections/14k-gold">
-        <img
-          src={getEditorialBannerSvg("shop-all-hero")}
-          alt="Jewellery made for the moments that matter"
-          loading="lazy"
-        />
-      </Link>
-      <ProductRow
-        title="BEST SELLERS"
-        tabs={["14K Gold", "Earrings", "Rings", "Necklaces", "All"]}
-        products={all.filter((p) => p.isBestSeller)}
-        href="/collections/best-sellers"
-      />
-      <Link href="/collections/personalized" className="personalized-campaign">
-        <img
-          src={photos.personalizedBanner}
-          alt="Personalized initial necklaces"
-          loading="lazy"
-        />
-        <div>
-          <h2>PERSONALIZED</h2>
-          <p>A little letter. A story only you can tell.</p>
-          <span className="white-cta">SHOP NOW</span>
+      </HomeSection>
+      <HomeSection id="marquee">
+        <div
+          className="managed-marquee"
+          tabIndex={0}
+          aria-label="Our jewellery values"
+        >
+          <div
+            style={{
+              animationDuration: `${home.data.marquee.speed}s`,
+              animationDirection:
+                home.data.marquee.direction === "right" ? "reverse" : "normal",
+            }}
+          >
+            {[0, 1].map((n) => (
+              <div className="marquee-copy" key={n} aria-hidden={n === 1}>
+                {home.data.marquee.messages.map((text, i) => (
+                  <span key={i}>{text}</span>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      </Link>
-      <section className="unboxing" id="showroom">
+      </HomeSection>
+      <HomeSection id="below-marquee">
+        <Link
+          className="editorial-interlude"
+          href={home.id("below-marquee").href}
+        >
+          <HomeMedia block={home.id("below-marquee")} />
+        </Link>
+      </HomeSection>
+      <HomeSection id="best-sellers">
+        <ProductRow
+          title="BEST SELLERS"
+          tabs={["14K Gold", "Earrings", "Rings", "Necklaces", "All"]}
+          products={
+            home.id("best-sellers").mode === "manual"
+              ? all.filter((p) =>
+                  home.id("best-sellers").productIds?.includes(p.id),
+                )
+              : all.filter((p) =>
+                  home.id("best-sellers").source === "featured"
+                    ? p.isFeatured
+                    : home.id("best-sellers").source === "new-arrivals"
+                      ? p.isNewArrival
+                      : p.isBestSeller,
+                )
+          }
+          href="/collections/best-sellers"
+        />
+      </HomeSection>
+      <HomeSection id="personalized">
+        <Link
+          href={home.id("personalized").href}
+          className="personalized-campaign"
+        >
+          <HomeMedia block={home.id("personalized")} />
+          <div>
+            <h2>{home.id("personalized").title}</h2>
+            <p>{home.id("personalized").text}</p>
+            <span className="white-cta">SHOP NOW</span>
+          </div>
+        </Link>
+      </HomeSection>
+      <HomeSection className="unboxing" id="unboxing">
         <div className="section-heading">
           <div>
-            <h2>UNBOX A TOUCH OF LUXURY</h2>
-            <p>A little luxury, in every detail.</p>
+            <h2>{home.id("unboxing").title}</h2>
+            <p>{home.id("unboxing").text}</p>
           </div>
           <Link
             href="/collections/shop-all"
@@ -211,16 +277,12 @@ export function HomepageView() {
             <ArrowUpRight size={20} />
           </Link>
         </div>
-        <Link href="/collections/shop-all">
-          <img
-            src={photos.giftBoxes}
-            alt="Signature blush floral jewellery gift boxes"
-            loading="lazy"
-          />
+        <Link href={home.id("unboxing").href}>
+          <HomeMedia block={home.id("unboxing")} />
         </Link>
-      </section>
+      </HomeSection>
       <ReviewsSection />
-      <section className="sparkle-gallery">
+      <HomeSection id="gallery" className="sparkle-gallery">
         <div className="section-heading">
           <h2>SHARE THE SPARKLE</h2>
           <a
@@ -232,15 +294,11 @@ export function HomepageView() {
           </a>
         </div>
         <div>
-          {[
-            photos.giftBoxes,
-            photos.huggies,
-            photos.studs,
-            photos.giftingLeft,
-            photos.piercings,
-            photos.rings,
-          ].map((image, i) => (
-            <Link href={`/collections/${categories[i][1]}`} key={i}>
+          {(home.id("gallery").slides || []).map((image, i) => (
+            <Link
+              href={`/collections/${categories[i % categories.length][1]}`}
+              key={i}
+            >
               <img
                 src={image}
                 alt={`Shop our community favourites ${i + 1}`}
@@ -249,7 +307,7 @@ export function HomepageView() {
             </Link>
           ))}
         </div>
-      </section>
+      </HomeSection>
     </div>
   );
 }

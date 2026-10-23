@@ -8,7 +8,7 @@ Login accepts any nonempty mock identifier and password. Registration accepts mo
 
 Both dashboards render their panels from already-loaded React components. `src/hooks/useDashboardNavigation.ts` updates the `?tab=` query with the native History API, integrated with Next.js `useSearchParams`, without a document reload or server-component navigation. Direct tab links, refresh and browser Back/Forward preserve the selected panel. Examples: `/account?tab=orders`, `/account?tab=profile`, `/admin?tab=products`, `/admin?tab=settings`.
 
-Desktop mega menus share one pointer region with a short close delay, keyboard access, Escape dismissal, backdrop dismissal and route-change cleanup. The pink Festival Sale option appears only within an open dropdown, without a permanent sale bar or a layout shift. Its collection uses existing products whose original prices exceed their current prices. Existing collection load-more increments, sorting and filters are unchanged.
+Desktop mega menus share a pointer region with keyboard access, Escape/backdrop dismissal and route-change cleanup. Published merchant navigation uses grouped desktop menus and nested mobile links. The configurable festival campaign can appear beneath navigation or on menu hover/focus only. Its collection uses products whose original prices exceed their current prices. Existing collection load-more increments, sorting and filters remain available.
 
 Run `npm install`, then `npm run dev` and visit `http://localhost:3000`.
 
@@ -17,7 +17,7 @@ Run `npm install`, then `npm run dev` and visit `http://localhost:3000`.
 - `/products/dome-huggie-hoop-earrings` — editorial gallery, zoom, finishes, quantities, wishlist, product details and bag drawer.
 - `/account/login`, `/account/register`, `/account/recover` — account entry screens using the supplied visual direction.
 - `/account` — overview, order details, wishlist, profile editing and saved delivery address.
-- `/admin` — merchant overview, order fulfilment, searchable and paginated products, price/stock/visibility editing, customers, CSV exports, discount creation and store settings.
+- `/admin` — complete merchant workspace with twelve instant panels, catalog creation, inventory, order/payment/return management, customer cards, statistics, visual navigation/homepage editors, campaigns and workflow documentation. See [MERCHANT-STUDIO.md](MERCHANT-STUDIO.md) for data contracts and verification.
 - `/checkout` — address validation, shipping methods, promotions and simulated order confirmation.
 - `/pages/faq`, `/pages/shipping`, `/pages/care`, `/pages/contact`, `/pages/privacy`, `/pages/terms` — working customer-care destinations.
 

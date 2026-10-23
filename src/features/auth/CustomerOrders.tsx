@@ -3,8 +3,10 @@ import { DemoOrder } from "@/types/commerce";
 import { Package } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import {useMerchant} from '@/hooks/useMerchant';
 
 export function CustomerOrders({ orders }: { orders: DemoOrder[] }) {
+  const {data}=useMerchant();
   const [expanded, setExpanded] = useState<string | null>(null);
   if (!orders.length)
     return (
@@ -35,7 +37,7 @@ export function CustomerOrders({ orders }: { orders: DemoOrder[] }) {
               </p>
             </div>
             <span className="status-pill">
-              {order.status.replace(" (Demo)", "")}
+              {(data.orderDetails[order.id]?.fulfillment||order.status.replace(" (Demo)", "")).replaceAll('-',' ')}
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -50,7 +52,7 @@ export function CustomerOrders({ orders }: { orders: DemoOrder[] }) {
               ))}
             </div>
             <div className="text-right">
-              <p className="text-sm">${order.total.toFixed(2)} USD</p>
+              <p className="text-sm">{order.currency==='BDT'?'৳':'$'}{order.total.toFixed(2)} {order.currency}</p>
               <button
                 className="muted underline"
                 onClick={() =>

@@ -30,11 +30,11 @@ export const INFORMATION_PAGES: Record<
     sections: [
       {
         title: "Standard tracked shipping",
-        body: "Standard shipping is $6.95 USD, or complimentary on orders of $60 USD or more. Estimated delivery is 4–7 business days.",
+        body: "Standard shipping is ৳100, or complimentary on orders of ৳6,000 or more. Estimated delivery is 4–7 business days. Current delivery fees and thresholds appear at checkout.",
       },
       {
         title: "Express delivery",
-        body: "DHL Express Priority is $18 USD with an estimated delivery of 2–3 business days. Overnight courier is $29 USD. Available methods and order totals appear at checkout.",
+        body: "Express delivery starts at ৳200 with an estimated delivery of 2–3 business days. Overnight courier is ৳300. Available methods and order totals appear at checkout.",
       },
       {
         title: "Duties & taxes",

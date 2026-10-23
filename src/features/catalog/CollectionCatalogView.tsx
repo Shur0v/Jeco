@@ -1,4 +1,6 @@
 'use client';
+import {useMerchant} from '@/hooks/useMerchant';
+
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -35,13 +37,14 @@ const FINISHES: MetalFinish[] = [
 ];
 
 export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
+  const {data:merchant}=useMerchant();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const { isHydrated } = useStore();
   const collection = useMemo(
     () => commerceService.catalog.getCollectionBySlug(slug),
-    [slug]
+    [slug, merchant]
   );
 
   const [inStockOnly, setInStockOnly] = useState(
@@ -54,7 +57,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
     searchParams.get('finish') || 'all'
   );
   const [maxPrice, setMaxPrice] = useState<number>(
-    Number(searchParams.get('maxPrice')) || 500
+    Number(searchParams.get('maxPrice')) || 50000
   );
   const [sortBy, setSortBy] = useState<SortOption>(
     (searchParams.get('sort') as SortOption) || 'featured'
@@ -73,10 +76,10 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
       inStockOnly,
       material: selectedMaterial,
       finish: selectedFinish,
-      maxPrice: maxPrice < 500 ? maxPrice : undefined,
+      maxPrice: maxPrice < 50000 ? maxPrice : undefined,
       sortBy,
     });
-  }, [slug, inStockOnly, selectedMaterial, selectedFinish, maxPrice, sortBy, isHydrated]);
+  }, [slug, inStockOnly, selectedMaterial, selectedFinish, maxPrice, sortBy, isHydrated, merchant]);
 
   function syncUrlParams(next: {
     inStock?: boolean;
@@ -112,7 +115,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
     setInStockOnly(false);
     setSelectedMaterial('all');
     setSelectedFinish('all');
-    setMaxPrice(500);
+    setMaxPrice(50000);
     setSortBy('featured');
     router.replace(`/collections/${slug}`, { scroll: false });
   }
@@ -123,7 +126,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
     (inStockOnly ? 1 : 0) +
     (selectedMaterial !== 'all' ? 1 : 0) +
     (selectedFinish !== 'all' ? 1 : 0) +
-    (maxPrice < 500 ? 1 : 0);
+    (maxPrice < 50000 ? 1 : 0);
 
   return (
     <div className="catalog-page bg-white min-h-screen">
@@ -194,7 +197,7 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
                   src={sub.image}
                   alt={sub.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-50000 group-hover:scale-105"
                 />
                 <div className="absolute inset-x-0 bottom-0 py-2 bg-gradient-to-t from-black/55 to-transparent text-center">
                   <span className="text-[10px] tracking-[0.12em] uppercase text-white font-medium">
@@ -348,13 +351,13 @@ export function CollectionCatalogView({ slug }: CollectionCatalogViewProps) {
               <div>
                 <div className="flex items-center justify-between text-[11px] tracking-[0.12em] uppercase text-[#292929] font-medium mb-2.5">
                   <span>Max Price</span>
-                  <span className="tabular-nums">${maxPrice} USD</span>
+                  <span className="tabular-nums">৳{maxPrice} BDT</span>
                 </div>
                 <input
                   type="range"
-                  aria-label="Maximum price in USD"
+                  aria-label="Maximum price in BDT"
                   min={30}
-                  max={500}
+                  max={50000}
                   step={10}
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(Number(e.target.value))}

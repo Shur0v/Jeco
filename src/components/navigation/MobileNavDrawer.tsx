@@ -1,13 +1,21 @@
-'use client';
+"use client";
+import { useMerchant } from "@/hooks/useMerchant";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { X, ChevronDown, ChevronRight, Search, User, Heart } from 'lucide-react';
-import { CURRENCIES, MAIN_NAV_ITEMS, SHOP_MEGA_MENU } from '@/config/site';
-import { useStore } from '@/hooks/useStore';
-import { CurrencyCode } from '@/types/commerce';
-import { useDialogFocus } from '@/hooks/useDialogFocus';
-import { PRIVATE_AREAS_ENABLED } from '@/config/features';
+import React, { useState } from "react";
+import Link from "next/link";
+import {
+  X,
+  ChevronDown,
+  ChevronRight,
+  Search,
+  User,
+  Heart,
+} from "lucide-react";
+import { CURRENCIES, MAIN_NAV_ITEMS, SHOP_MEGA_MENU } from "@/config/site";
+import { useStore } from "@/hooks/useStore";
+import { CurrencyCode } from "@/types/commerce";
+import { useDialogFocus } from "@/hooks/useDialogFocus";
+import { PRIVATE_AREAS_ENABLED } from "@/config/features";
 
 interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -16,14 +24,20 @@ interface MobileNavDrawerProps {
 
 export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
   useDialogFocus(isOpen);
+  const { data: merchant } = useMerchant();
   const { currency, setCurrency, session, setIsSearchOpen, wishlistIds } =
     useStore();
-  const [expandedGroup, setExpandedGroup] = useState<string | null>('category');
+  const [expandedGroup, setExpandedGroup] = useState<string | null>("category");
 
   if (!isOpen) return null;
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Store navigation" className="fixed inset-0 z-50 lg:hidden flex">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Store navigation"
+      className="fixed inset-0 z-50 lg:hidden flex"
+    >
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-[1px]"
         onClick={onClose}
@@ -66,28 +80,86 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
           </div>
 
           {/* Primary Links */}
-          <nav className="divide-y divide-[#EAE6E4]" aria-label="Mobile navigation">
+          <nav
+            className="divide-y divide-[#EAE6E4]"
+            aria-label="Mobile navigation"
+          >
             <div className="py-2">
-              {MAIN_NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={onClose}
-                  className="flex items-center justify-between px-5 py-3 text-[14px] text-[#292929] hover:bg-[#FAF8F7]"
-                >
-                  <span>{item.label}</span>
-                  <ChevronRight className="w-4 h-4 text-[#777777]" />
-                </Link>
-              ))}
+              {merchant.menuPublished
+                ? merchant.menus
+                    .filter(
+                      (m) =>
+                        !m.parentId &&
+                        !m.hidden &&
+                        !merchant.categories.find((c) => c.id === m.categoryId)
+                          ?.hidden,
+                    )
+                    .map((item) => (
+                      <div key={item.id}>
+                        <div className="flex items-center justify-between px-5 py-3">
+                          <Link href={item.href} onClick={onClose}>
+                            {item.label}
+                          </Link>
+                          {merchant.menus.some(
+                            (m) => m.parentId === item.id,
+                          ) && (
+                            <button
+                              aria-label={`Expand ${item.label}`}
+                              aria-expanded={expandedGroup === item.id}
+                              onClick={() =>
+                                setExpandedGroup(
+                                  expandedGroup === item.id ? null : item.id,
+                                )
+                              }
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        {expandedGroup === item.id && (
+                          <div className="managed-mobile-children">
+                            {merchant.menus
+                              .filter(
+                                (m) =>
+                                  m.parentId === item.id &&
+                                  !m.hidden &&
+                                  !merchant.categories.find(
+                                    (c) => c.id === m.categoryId,
+                                  )?.hidden,
+                              )
+                              .map((m) => (
+                                <Link
+                                  href={m.href}
+                                  key={m.id}
+                                  onClick={onClose}
+                                >
+                                  {m.label}
+                                </Link>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                : MAIN_NAV_ITEMS.map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={onClose}
+                      className="flex items-center justify-between px-5 py-3 text-[14px] text-[#292929] hover:bg-[#FAF8F7]"
+                    >
+                      <span>{item.label}</span>
+                      <ChevronRight className="w-4 h-4 text-[#777777]" />
+                    </Link>
+                  ))}
             </div>
 
             {/* Expandable Materials */}
-            <div className="px-5 py-3">
+            <div className="px-5 py-3" hidden={merchant.menuPublished}>
               <button
                 type="button"
                 onClick={() =>
                   setExpandedGroup(
-                    expandedGroup === 'material' ? null : 'material'
+                    expandedGroup === "material" ? null : "material",
                   )
                 }
                 className="w-full flex items-center justify-between py-2 text-[12px] tracking-[0.12em] uppercase font-medium text-[#292929]"
@@ -95,11 +167,11 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
                 <span>Shop By Material</span>
                 <ChevronDown
                   className={`w-4 h-4 transition-transform ${
-                    expandedGroup === 'material' ? 'rotate-180' : ''
+                    expandedGroup === "material" ? "rotate-180" : ""
                   }`}
                 />
               </button>
-              {expandedGroup === 'material' && (
+              {expandedGroup === "material" && (
                 <ul className="pt-2 pb-1 space-y-2.5 pl-2">
                   {SHOP_MEGA_MENU.byMaterial.map((m) => (
                     <li key={m.label}>
@@ -121,16 +193,20 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
         {/* Footer Account & Currency Controls */}
         <div className="border-t border-[#EAE6E4] p-5 bg-[#FAF8F7] space-y-4">
           <div className="flex items-center justify-between">
-            {PRIVATE_AREAS_ENABLED && <Link
-              href={session ? '/account' : '/account/login'}
-              onClick={onClose}
-              className="flex items-center gap-2.5 text-[13.5px] text-[#292929] font-medium"
-            >
-              <User className="w-4 h-4 stroke-[1.5]" />
-              <span>
-                {session ? `Account (${session.firstName})` : 'Log in / Register'}
-              </span>
-            </Link>}
+            {PRIVATE_AREAS_ENABLED && (
+              <Link
+                href={session ? "/account" : "/account/login"}
+                onClick={onClose}
+                className="flex items-center gap-2.5 text-[13.5px] text-[#292929] font-medium"
+              >
+                <User className="w-4 h-4 stroke-[1.5]" />
+                <span>
+                  {session
+                    ? `Account (${session.firstName})`
+                    : "Log in / Register"}
+                </span>
+              </Link>
+            )}
 
             <Link
               href="/wishlist"
@@ -150,11 +226,13 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
               aria-label="Select store currency"
               className="text-[12.5px] text-[#292929] bg-white border border-[#EAE6E4] px-2.5 py-1.5 focus:outline-none"
             >
-              {Object.values(CURRENCIES).map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.label}
-                </option>
-              ))}
+              {Object.values(CURRENCIES)
+                .filter((c) => c.code === "BDT")
+                .map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.label}
+                  </option>
+                ))}
             </select>
           </div>
         </div>

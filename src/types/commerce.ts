@@ -1,4 +1,4 @@
-export type CurrencyCode = 'USD' | 'CAD' | 'EUR' | 'GBP' | 'AUD' | 'SGD';
+export type CurrencyCode = 'BDT' | 'USD' | 'CAD' | 'EUR' | 'GBP' | 'AUD' | 'SGD';
 
 export interface CurrencyConfig {
   code: CurrencyCode;
@@ -63,6 +63,7 @@ export interface ProductVariant {
 }
 
 export interface ProductVisualSpec {
+  customImage?: string;
   photoKey?: string;
   shape:
     | 'dome-huggie'

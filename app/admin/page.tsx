@@ -1,4 +1,4 @@
-import { AdminDashboard } from "@/features/admin/AdminDashboard";
+import { MerchantStudio as AdminDashboard } from "@/features/admin/MerchantStudio";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 export const metadata: Metadata = {

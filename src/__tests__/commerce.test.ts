@@ -68,9 +68,9 @@ describe('J&CO. Jewellery Mock Commerce Service & Catalog', () => {
     expect(valid10.valid).toBe(true);
     expect(valid10.discountAmount).toBe(10);
 
-    const flat15 = commerceService.promotions.validatePromoCode('SPARKLE15', 120);
+    const flat15 = commerceService.promotions.validatePromoCode('SPARKLE15', 12000);
     expect(flat15.valid).toBe(true);
-    expect(flat15.discountAmount).toBe(15);
+    expect(flat15.discountAmount).toBe(1500);
 
     const invalid = commerceService.promotions.validatePromoCode('NOTACODE', 100);
     expect(invalid.valid).toBe(false);

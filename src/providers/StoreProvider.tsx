@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, {
   createContext,
@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
-} from 'react';
+} from "react";
 import {
   CartItem,
   CurrencyCode,
@@ -17,22 +17,28 @@ import {
   Product,
   PromoCode,
   Review,
-} from '@/types/commerce';
-import { commerceService } from '@/commerce';
-import { SITE_CONFIG } from '@/config/site';
-import { hydrateCatalog } from '@/lib/admin-catalog';
-import { PRIVATE_AREAS_ENABLED } from '@/config/features';
-import { getProductStudioSvg } from '@/lib/artwork';
+} from "@/types/commerce";
+import { commerceService } from "@/commerce";
+import { SITE_CONFIG } from "@/config/site";
+import { hydrateCatalog } from "@/lib/admin-catalog";
+import { useMerchant } from "@/hooks/useMerchant";
+import {
+  initMerchant,
+  subscribeMerchant,
+  getMerchant,
+} from "@/lib/merchant-store";
+import { PRIVATE_AREAS_ENABLED } from "@/config/features";
+import { getProductStudioSvg } from "@/lib/artwork";
 
 const STORAGE_KEYS = {
-  CART: 'jco_demo_cart_v1',
-  WISHLIST: 'jco_demo_wishlist_v1',
-  RECENT: 'jco_demo_recent_v1',
-  SESSION: 'jco_demo_auth_session_v1',
-  ORDERS: 'jco_demo_orders_v1',
-  CURRENCY: 'jco_demo_currency_v1',
-  REVIEWS: 'jco_demo_custom_reviews_v1',
-  NEWSLETTER: 'jco_demo_newsletter_v1',
+  CART: "jco_demo_cart_v1",
+  WISHLIST: "jco_demo_wishlist_v1",
+  RECENT: "jco_demo_recent_v1",
+  SESSION: "jco_demo_auth_session_v1",
+  ORDERS: "jco_demo_orders_v1",
+  CURRENCY: "jco_demo_currency_v1",
+  REVIEWS: "jco_demo_custom_reviews_v1",
+  NEWSLETTER: "jco_demo_newsletter_v1",
 };
 
 interface RegisterPayload {
@@ -66,7 +72,7 @@ interface StoreContextValue {
       quantity?: number;
       openDrawer?: boolean;
       giftNote?: string;
-    }
+    },
   ) => void;
   updateCartQuantity: (cartItemId: string, quantity: number) => void;
   removeFromCart: (cartItemId: string) => void;
@@ -87,7 +93,7 @@ interface StoreContextValue {
   session: DemoUserSession | null;
   loginDemo: (
     userIdOrEmail: string,
-    password: string
+    password: string,
   ) => { success: boolean; error?: string };
   registerDemo: (payload: RegisterPayload) => {
     success: boolean;
@@ -98,10 +104,12 @@ interface StoreContextValue {
   // Demo Orders
   orders: DemoOrder[];
   recordDemoOrder: (order: DemoOrder) => void;
-  updateOrderStatus: (id: string, status: DemoOrder['status']) => void;
+  updateOrderStatus: (id: string, status: DemoOrder["status"]) => void;
   // Custom Reviews
   customReviews: Review[];
-  addCustomReview: (review: Omit<Review, 'id' | 'date' | 'helpfulCount'>) => void;
+  addCustomReview: (
+    review: Omit<Review, "id" | "date" | "helpfulCount">,
+  ) => void;
   // Search & UI
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
@@ -116,7 +124,7 @@ const StoreContext = createContext<StoreContextValue | undefined>(undefined);
 
 function getDefaultInitialCart(): CartItem[] {
   const domeHuggie = commerceService.catalog.getProductById(
-    'prod-dome-huggie-hoop'
+    "prod-dome-huggie-hoop",
   );
   if (!domeHuggie) return [];
   const goldVariant = domeHuggie.variants[0];
@@ -139,30 +147,58 @@ function getDefaultInitialCart(): CartItem[] {
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const { data: merchant } = useMerchant();
   const [isHydrated, setIsHydrated] = useState(false);
-  const [currency, setCurrencyState] = useState<CurrencyCode>('USD');
+  const [currency, setCurrencyState] = useState<CurrencyCode>("BDT");
   const [cartItems, setCartItems] = useState<CartItem[]>(getDefaultInitialCart);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [wishlistIds, setWishlistIds] = useState<string[]>([
-    'prod-14k-pave-cz-heart-flatback',
-    'prod-sparkle-heart-dome-gold-ring',
+    "prod-14k-pave-cz-heart-flatback",
+    "prod-sparkle-heart-dome-gold-ring",
   ]);
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([
-    'prod-dome-huggie-hoop',
+    "prod-dome-huggie-hoop",
   ]);
   const [session, setSession] = useState<DemoUserSession | null>(null);
   const [orders, setOrders] = useState<DemoOrder[]>([]);
   const [customReviews, setCustomReviews] = useState<Review[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [toast, setToast] = useState<{ id: number; message: string } | null>(
-    null
+    null,
   );
   const [subscribedEmails, setSubscribedEmails] = useState<string[]>([]);
+  useEffect(() => {
+    if (!isHydrated || !session) return;
+    try {
+      const profiles = JSON.parse(
+        localStorage.getItem("jco_demo_profiles_v1") || "{}",
+      );
+      profiles[session.userId.toLowerCase()] = {
+        ...profiles[session.userId.toLowerCase()],
+        ...session,
+        wishlistIds,
+      };
+      localStorage.setItem("jco_demo_profiles_v1", JSON.stringify(profiles));
+    } catch {}
+  }, [wishlistIds, session, isHydrated]);
 
   const showToast = useCallback((message: string) => {
     setToast({ id: Date.now(), message });
   }, []);
+
+  useEffect(() => {
+    const unsub = subscribeMerchant(() => {
+      setOrders((prev) => [
+        ...getMerchant().orders,
+        ...prev.filter((o) => !getMerchant().orders.some((n) => n.id === o.id)),
+      ]);
+    });
+    initMerchant().catch(() =>
+      showToast("Browser storage is unavailable. Changes cannot be saved."),
+    );
+    return unsub;
+  }, [showToast]);
 
   useEffect(() => {
     if (!toast) return;
@@ -177,16 +213,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         hydrateCatalog();
         const savedCart = window.localStorage.getItem(STORAGE_KEYS.CART);
         if (savedCart) {
-          setCartItems(JSON.parse(savedCart));
+          const old = JSON.parse(savedCart) as CartItem[];
+          setCartItems(
+            old.flatMap((item) => {
+              const p = commerceService.catalog.getProductById(item.productId);
+              const v = p?.variants.find((v) => v.id === item.variantId);
+              return p && v
+                ? [
+                    {
+                      ...item,
+                      price: v.price,
+                      compareAtPrice: v.compareAtPrice,
+                      maxStock: v.stockCount,
+                    },
+                  ]
+                : [];
+            }),
+          );
         } else {
           window.localStorage.setItem(
             STORAGE_KEYS.CART,
-            JSON.stringify(getDefaultInitialCart())
+            JSON.stringify(getDefaultInitialCart()),
           );
         }
 
         const savedWishlist = window.localStorage.getItem(
-          STORAGE_KEYS.WISHLIST
+          STORAGE_KEYS.WISHLIST,
         );
         if (savedWishlist) setWishlistIds(JSON.parse(savedWishlist));
 
@@ -194,21 +246,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedRecent) setRecentlyViewedIds(JSON.parse(savedRecent));
 
         const savedSession = window.localStorage.getItem(STORAGE_KEYS.SESSION);
-        if (savedSession && PRIVATE_AREAS_ENABLED) setSession(JSON.parse(savedSession));
+        if (savedSession && PRIVATE_AREAS_ENABLED)
+          setSession(JSON.parse(savedSession));
 
         const savedOrders = window.localStorage.getItem(STORAGE_KEYS.ORDERS);
         if (savedOrders) setOrders(JSON.parse(savedOrders));
 
         const savedCurrency = window.localStorage.getItem(
-          STORAGE_KEYS.CURRENCY
+          STORAGE_KEYS.CURRENCY,
         );
-        if (savedCurrency) setCurrencyState(savedCurrency as CurrencyCode);
+        if (savedCurrency) setCurrencyState("BDT");
 
         const savedReviews = window.localStorage.getItem(STORAGE_KEYS.REVIEWS);
         if (savedReviews) setCustomReviews(JSON.parse(savedReviews));
 
         const savedNewsletter = window.localStorage.getItem(
-          STORAGE_KEYS.NEWSLETTER
+          STORAGE_KEYS.NEWSLETTER,
         );
         if (savedNewsletter) setSubscribedEmails(JSON.parse(savedNewsletter));
       } catch {
@@ -220,7 +273,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setCurrency = useCallback((code: CurrencyCode) => {
-    setCurrencyState(code);
+    setCurrencyState("BDT");
     try {
       window.localStorage.setItem(STORAGE_KEYS.CURRENCY, code);
     } catch {}
@@ -242,7 +295,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         quantity?: number;
         openDrawer?: boolean;
         giftNote?: string;
-      }
+      },
     ) => {
       const targetFinish = options?.finish || product.availableFinishes[0];
       const targetSize = options?.size;
@@ -251,12 +304,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const matchedVariant =
         product.variants.find(
           (v) =>
-            v.finish === targetFinish &&
-            (!targetSize || v.size === targetSize)
+            v.finish === targetFinish && (!targetSize || v.size === targetSize),
         ) || product.variants[0];
 
       if (!matchedVariant || !matchedVariant.inStock || !product.inStock) {
-        showToast('Selected item is currently sold out.');
+        showToast("Selected item is currently sold out.");
         return;
       }
 
@@ -264,7 +316,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const finishImage = getProductStudioSvg(
         product.visualSpec,
         matchedVariant.finish,
-        0
+        0,
       );
 
       setCartItems((prev) => {
@@ -275,12 +327,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             idx === existingIndex
               ? {
                   ...item,
-                  quantity: Math.min(
-                    item.maxStock,
-                    item.quantity + qtyToAdd
-                  ),
+                  quantity: Math.min(item.maxStock, item.quantity + qtyToAdd),
                 }
-              : item
+              : item,
           );
         } else {
           updated = [
@@ -305,7 +354,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         try {
           window.localStorage.setItem(
             STORAGE_KEYS.CART,
-            JSON.stringify(updated)
+            JSON.stringify(updated),
           );
         } catch {}
         return updated;
@@ -317,7 +366,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         showToast(`Added ${product.name} to your bag`);
       }
     },
-    [showToast]
+    [showToast],
   );
 
   const updateCartQuantity = useCallback(
@@ -330,20 +379,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const next = cartItems.map((item) =>
         item.id === cartItemId
           ? { ...item, quantity: Math.min(item.maxStock, quantity) }
-          : item
+          : item,
       );
       persistCart(next);
     },
-    [cartItems, persistCart]
+    [cartItems, persistCart],
   );
 
   const removeFromCart = useCallback(
     (cartItemId: string) => {
       const next = cartItems.filter((item) => item.id !== cartItemId);
       persistCart(next);
-      showToast('Removed item from bag');
+      showToast("Removed item from bag");
     },
-    [cartItems, persistCart, showToast]
+    [cartItems, persistCart, showToast],
   );
 
   const clearCart = useCallback(() => {
@@ -353,7 +402,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const itemCount = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
-    [cartItems]
+    [cartItems],
   );
 
   const subtotal = useMemo(
@@ -361,63 +410,62 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       Number(
         cartItems
           .reduce((sum, item) => sum + item.price * item.quantity, 0)
-          .toFixed(2)
+          .toFixed(2),
       ),
-    [cartItems]
+    [cartItems],
   );
 
   const freeShippingRemaining = useMemo(
     () =>
       Math.max(
         0,
-        Number((SITE_CONFIG.freeShippingThresholdUSD - subtotal).toFixed(2))
+        Number((merchant.settings.freeShipping - subtotal).toFixed(2)),
       ),
-    [subtotal]
+    [subtotal, merchant.settings],
   );
 
   const freeShippingProgress = useMemo(
     () =>
       Math.min(
         100,
-        Math.round((subtotal / SITE_CONFIG.freeShippingThresholdUSD) * 100)
+        Math.round((subtotal / merchant.settings.freeShipping) * 100),
       ),
-    [subtotal]
+    [subtotal, merchant.settings],
   );
 
   const freeGiftRemaining = useMemo(
     () =>
-      Math.max(
-        0,
-        Number((SITE_CONFIG.freeGiftThresholdUSD - subtotal).toFixed(2))
-      ),
-    [subtotal]
+      Math.max(0, Number((merchant.settings.freeGift - subtotal).toFixed(2))),
+    [subtotal, merchant.settings],
   );
 
   const freeGiftProgress = useMemo(
     () =>
-      Math.min(
-        100,
-        Math.round((subtotal / SITE_CONFIG.freeGiftThresholdUSD) * 100)
-      ),
-    [subtotal]
+      Math.min(100, Math.round((subtotal / merchant.settings.freeGift) * 100)),
+    [subtotal, merchant.settings],
   );
 
   const discountAmount = useMemo(() => {
     if (!appliedPromo) return 0;
     const check = commerceService.promotions.validatePromoCode(
       appliedPromo.code,
-      subtotal
+      subtotal,
+      cartItems,
     );
     return check.valid ? check.discountAmount : 0;
-  }, [appliedPromo, subtotal]);
+  }, [appliedPromo, subtotal, cartItems, merchant]);
 
   const applyPromoCode = useCallback(
     (code: string) => {
-      const res = commerceService.promotions.validatePromoCode(code, subtotal);
+      const res = commerceService.promotions.validatePromoCode(
+        code,
+        subtotal,
+        cartItems,
+      );
       if (!res.valid || !res.promo) {
         return {
           success: false,
-          message: res.errorMessage || 'Invalid promo code',
+          message: res.errorMessage || "Invalid promo code",
         };
       }
       setAppliedPromo(res.promo);
@@ -426,7 +474,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         message: `Applied ${res.promo.code} (${res.promo.description})`,
       };
     },
-    [subtotal]
+    [subtotal, cartItems, merchant],
   );
 
   const removePromoCode = useCallback(() => {
@@ -443,21 +491,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         try {
           window.localStorage.setItem(
             STORAGE_KEYS.WISHLIST,
-            JSON.stringify(next)
+            JSON.stringify(next),
           );
         } catch {}
         showToast(
-          exists ? 'Removed from your wishlist' : 'Saved to your wishlist'
+          exists ? "Removed from your wishlist" : "Saved to your wishlist",
         );
         return next;
       });
     },
-    [showToast]
+    [showToast],
   );
 
   const isInWishlist = useCallback(
     (productId: string) => wishlistIds.includes(productId),
-    [wishlistIds]
+    [wishlistIds],
   );
 
   const trackProductView = useCallback((productId: string) => {
@@ -480,23 +528,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!trimmedId || !trimmedPass) {
         return {
           success: false,
-          error: 'Please enter both a User ID / Email and a Password.',
+          error: "Please enter both a User ID / Email and a Password.",
         };
       }
 
-      const namePart = trimmedId.includes('@')
-        ? trimmedId.split('@')[0]
+      const namePart = trimmedId.includes("@")
+        ? trimmedId.split("@")[0]
         : trimmedId;
-      const capitalized =
-        namePart.charAt(0).toUpperCase() + namePart.slice(1);
-      let profile: Partial<DemoUserSession> = {};
-      try { profile = JSON.parse(window.localStorage.getItem('jco_demo_profiles_v1') || '{}')[trimmedId.toLowerCase()] || {}; } catch {}
+      const capitalized = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      let profile: Partial<DemoUserSession> & { wishlistIds?: string[] } = {};
+      try {
+        profile =
+          JSON.parse(
+            window.localStorage.getItem("jco_demo_profiles_v1") || "{}",
+          )[trimmedId.toLowerCase()] || {};
+      } catch {}
 
       const newSession: DemoUserSession = {
         userId: trimmedId,
         email: trimmedId,
         firstName: profile.firstName || capitalized,
-        lastName: profile.lastName || 'Member',
+        lastName: profile.lastName || "Member",
         birthDate: profile.birthDate,
         phone: profile.phone,
         defaultAddress: profile.defaultAddress,
@@ -505,16 +557,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       };
 
       setSession(newSession);
+      if (profile.wishlistIds) setWishlistIds(profile.wishlistIds);
       try {
         window.localStorage.setItem(
           STORAGE_KEYS.SESSION,
-          JSON.stringify(newSession)
+          JSON.stringify(newSession),
         );
       } catch {}
       showToast(`Signed in to demo account as ${trimmedId}`);
       return { success: true };
     },
-    [showToast]
+    [showToast],
   );
 
   const registerDemo = useCallback(
@@ -524,7 +577,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!trimmedEmail || !trimmedPassword || !payload.firstName.trim()) {
         return {
           success: false,
-          error: 'Please fill in all required fields.',
+          error: "Please fill in all required fields.",
         };
       }
 
@@ -543,18 +596,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       try {
         window.localStorage.setItem(
           STORAGE_KEYS.SESSION,
-          JSON.stringify(newSession)
+          JSON.stringify(newSession),
         );
       } catch {}
       showToast(`Welcome to J&CO. Jewels, ${newSession.firstName}!`);
       try {
-        const profiles = JSON.parse(window.localStorage.getItem('jco_demo_profiles_v1') || '{}');
+        const profiles = JSON.parse(
+          window.localStorage.getItem("jco_demo_profiles_v1") || "{}",
+        );
         profiles[newSession.userId.toLowerCase()] = newSession;
-        window.localStorage.setItem('jco_demo_profiles_v1', JSON.stringify(profiles));
+        window.localStorage.setItem(
+          "jco_demo_profiles_v1",
+          JSON.stringify(profiles),
+        );
       } catch {}
       return { success: true };
     },
-    [showToast]
+    [showToast],
   );
 
   const updateDemoProfile = useCallback(
@@ -563,19 +621,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!prev) return prev;
         const next = { ...prev, ...updates };
         try {
-          const profiles = JSON.parse(window.localStorage.getItem('jco_demo_profiles_v1') || '{}');
+          const profiles = JSON.parse(
+            window.localStorage.getItem("jco_demo_profiles_v1") || "{}",
+          );
           profiles[next.userId.toLowerCase()] = next;
-          window.localStorage.setItem('jco_demo_profiles_v1', JSON.stringify(profiles));
+          window.localStorage.setItem(
+            "jco_demo_profiles_v1",
+            JSON.stringify(profiles),
+          );
           window.localStorage.setItem(
             STORAGE_KEYS.SESSION,
-            JSON.stringify(next)
+            JSON.stringify(next),
           );
         } catch {}
         return next;
       });
-      showToast('Demo profile updated');
+      showToast("Demo profile updated");
     },
-    [showToast]
+    [showToast],
   );
 
   const logoutDemo = useCallback(() => {
@@ -583,17 +646,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.removeItem(STORAGE_KEYS.SESSION);
     } catch {}
-    showToast('Signed out of demo session');
+    showToast("Signed out of demo session");
   }, [showToast]);
 
-  const updateOrderStatus = useCallback((id: string, status: DemoOrder['status']) => {
-    setOrders(prev => {
-      const next = prev.map(order => order.id === id ? { ...order, status } : order);
-      try { window.localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(next)); } catch {}
-      return next;
-    });
-    showToast('Order status updated');
-  }, [showToast]);
+  const updateOrderStatus = useCallback(
+    (id: string, status: DemoOrder["status"]) => {
+      setOrders((prev) => {
+        const next = prev.map((order) =>
+          order.id === id ? { ...order, status } : order,
+        );
+        try {
+          window.localStorage.setItem(
+            STORAGE_KEYS.ORDERS,
+            JSON.stringify(next),
+          );
+        } catch {}
+        return next;
+      });
+      showToast("Order status updated");
+    },
+    [showToast],
+  );
 
   const recordDemoOrder = useCallback((order: DemoOrder) => {
     setOrders((prev) => {
@@ -609,11 +682,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addCustomReview = useCallback(
-    (reviewInput: Omit<Review, 'id' | 'date' | 'helpfulCount'>) => {
+    (reviewInput: Omit<Review, "id" | "date" | "helpfulCount">) => {
       const now = new Date();
-      const dateStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(
-        now.getDate()
-      ).padStart(2, '0')}/${now.getFullYear()}`;
+      const dateStr = `${String(now.getMonth() + 1).padStart(2, "0")}/${String(
+        now.getDate(),
+      ).padStart(2, "0")}/${now.getFullYear()}`;
       const newReview: Review = {
         ...reviewInput,
         id: `demo-rev-${Date.now()}`,
@@ -625,34 +698,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         try {
           window.localStorage.setItem(
             STORAGE_KEYS.REVIEWS,
-            JSON.stringify(next)
+            JSON.stringify(next),
           );
         } catch {}
         return next;
       });
-      showToast('Thank you! Your demo review has been added.');
+      showToast("Thank you! Your demo review has been added.");
     },
-    [showToast]
+    [showToast],
   );
 
   const subscribeNewsletter = useCallback(
     (email: string) => {
       const clean = email.trim().toLowerCase();
-      if (!clean || !clean.includes('@')) return false;
+      if (!clean || !clean.includes("@")) return false;
       setSubscribedEmails((prev) => {
         const next = prev.includes(clean) ? prev : [...prev, clean];
         try {
           window.localStorage.setItem(
             STORAGE_KEYS.NEWSLETTER,
-            JSON.stringify(next)
+            JSON.stringify(next),
           );
         } catch {}
         return next;
       });
-      showToast('Subscribed to J&CO. Jewels exclusive updates (Demo)');
+      showToast("Subscribed to J&CO. Jewels exclusive updates (Demo)");
       return true;
     },
-    [showToast]
+    [showToast],
   );
 
   const value = useMemo<StoreContextValue>(
@@ -739,7 +812,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       showToast,
       subscribedEmails,
       subscribeNewsletter,
-    ]
+    ],
   );
 
   return (
@@ -750,7 +823,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 export function useStore(): StoreContextValue {
   const ctx = useContext(StoreContext);
   if (!ctx) {
-    throw new Error('useStore must be used within a StoreProvider');
+    throw new Error("useStore must be used within a StoreProvider");
   }
   return ctx;
 }

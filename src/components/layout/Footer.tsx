@@ -6,11 +6,12 @@ import { ChevronRight, ChevronDown, Instagram, Facebook, Youtube, Music2 } from 
 import { FOOTER_LINKS } from '@/config/site';
 import { useStore } from '@/hooks/useStore';
 import { PRIVATE_AREAS_ENABLED } from '@/config/features';
+import {useMerchant} from '@/hooks/useMerchant';
 
 export function Footer() {
   const { subscribeNewsletter } = useStore();
-  const [storeName, setStoreName] = useState('J&CO Jewellery');
-  useEffect(() => { try { setStoreName(JSON.parse(localStorage.getItem('jco_admin_settings_v1') || '{}').storeName || 'J&CO Jewellery'); } catch {} }, []);
+  const {data}=useMerchant();
+  const storeName=data.settings.name;
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');

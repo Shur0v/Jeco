@@ -10,16 +10,16 @@ export const MOCK_PROMO_CODES: PromoCode[] = [
   },
   {
     code: 'JCO20',
-    description: '20% off orders $100 USD+',
+    description: '20% off orders ৳10,000+',
     discountType: 'percentage',
     value: 20,
-    minSubtotal: 100,
+    minSubtotal: 10000,
   },
   {
     code: 'SPARKLE15',
-    description: '$15 USD off orders $75 USD+',
+    description: '৳1,500 off orders ৳7,500+',
     discountType: 'fixed',
-    value: 15,
-    minSubtotal: 75,
+    value: 1500,
+    minSubtotal: 7500,
   },
 ];

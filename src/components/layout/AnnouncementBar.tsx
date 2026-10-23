@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { SITE_CONFIG } from '@/config/site';
+import {useMerchant} from '@/hooks/useMerchant';
 
 export function AnnouncementBar() {
+  const {data}=useMerchant();
   const [msgIndex, setMsgIndex] = useState(0);
   const [announcement, setAnnouncement] = useState('');
   useEffect(() => { try { setAnnouncement(JSON.parse(localStorage.getItem('jco_admin_settings_v1') || '{}').announcement || ''); } catch {} }, []);
@@ -19,7 +21,7 @@ export function AnnouncementBar() {
       title="Click to view next store offer"
     >
       <p className="text-center font-normal truncate">
-        {msgIndex === 0 && announcement ? announcement : SITE_CONFIG.announcementMessages[msgIndex]}
+        {msgIndex===0?data.settings.announcement:SITE_CONFIG.announcementMessages[msgIndex]}
       </p>
     </div>
   );

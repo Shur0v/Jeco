@@ -17,8 +17,8 @@ export const DESIGN_TOKENS = {
     whiteGoldSwatch: '#E5E6E8',
   },
   thresholds: {
-    freeShippingUSD: 60,
-    freeGiftUSD: 120,
+    freeShippingBDT: 6000,
+    freeGiftBDT: 12000,
   },
 } as const;
 

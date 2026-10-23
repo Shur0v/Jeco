@@ -7,15 +7,16 @@ export const SITE_CONFIG = {
   description:
     'Thoughtfully crafted 14K solid gold, gold filled, sterling silver, flatback piercings, huggie hoops, statement rings, and personalized jewellery for 24/7 comfort.',
   announcementMessages: [
-    'Free Shipping On Orders $60 USD+',
-    'Spend $120 USD+ to Receive a Complimentary Jewellery Travel Case',
+    'Free Shipping On Orders ৳6,000+',
+    'Spend ৳12,000+ to Receive a Complimentary Jewellery Travel Case',
     'Gentle on Sensitive Skin · 14K Solid Gold, Gold Filled & 925 Sterling Silver',
   ],
-  freeShippingThresholdUSD: 60,
-  freeGiftThresholdUSD: 120,
+  freeShippingThresholdBDT: 6000,
+  freeGiftThresholdBDT: 12000,
 };
 
 export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
+  BDT: { code: 'BDT', symbol: '৳', label: 'BD (BDT ৳)', rateFromUSD: 1 },
   USD: { code: 'USD', symbol: '$', label: 'US (USD $)', rateFromUSD: 1 },
   CAD: { code: 'CAD', symbol: '$', label: 'CA (CAD $)', rateFromUSD: 1.36 },
   EUR: { code: 'EUR', symbol: '€', label: 'EU (EUR €)', rateFromUSD: 0.92 },
@@ -124,24 +125,24 @@ export const SHIPPING_METHODS: ShippingMethod[] = [
   {
     id: 'standard',
     name: 'Standard Tracked Shipping',
-    description: 'Complimentary on orders $60 USD+',
+    description: 'Complimentary on orders ৳6,000+',
     estimatedDays: '4–7 business days',
-    price: 6.95,
-    freeOverSubtotal: 60,
+    price: 100,
+    freeOverSubtotal: 6000,
   },
   {
     id: 'express',
     name: 'DHL Express Priority',
     description: 'Signature delivery with full insurance',
     estimatedDays: '2–3 business days',
-    price: 18.0,
+    price: 200,
   },
   {
     id: 'next-day',
     name: 'Overnight Courier',
     description: 'Next business day air delivery',
     estimatedDays: '1 business day',
-    price: 29.0,
+    price: 300,
   },
 ];
 

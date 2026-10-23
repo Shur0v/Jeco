@@ -1,4 +1,5 @@
 import {
+  CartItem,
   Collection,
   Product,
   ProductFilterState,
@@ -30,7 +31,8 @@ export interface IReviewService {
 export interface IPromotionService {
   validatePromoCode(
     code: string,
-    subtotal: number
+    subtotal: number,
+    items?: CartItem[]
   ): {
     valid: boolean;
     promo?: PromoCode;

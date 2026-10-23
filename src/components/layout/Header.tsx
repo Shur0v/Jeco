@@ -11,7 +11,18 @@ import { MobileNavDrawer } from "@/components/navigation/MobileNavDrawer";
 import { PRIVATE_AREAS_ENABLED } from "@/config/features";
 import { usePathname } from "next/navigation";
 
+import { useMerchant } from "@/hooks/useMerchant";
+import { SaleBanner } from "@/components/shared/SaleBanner";
 export function Header() {
+  const { data: merchant } = useMerchant();
+  const [managedOpen, setManagedOpen] = useState("");
+  const [navHover, setNavHover] = useState(false);
+  const managedNav = merchant.menus.filter(
+    (m) =>
+      !m.parentId &&
+      !m.hidden &&
+      !merchant.categories.find((c) => c.id === m.categoryId)?.hidden,
+  );
   const {
     currency,
     setCurrency,
@@ -28,6 +39,12 @@ export function Header() {
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
+  const managedChildren = merchant.menus.filter(
+    (m) =>
+      m.parentId === managedOpen &&
+      !m.hidden &&
+      !merchant.categories.find((c) => c.id === m.categoryId)?.hidden,
+  );
   function cancelMenuClose() {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = null;
@@ -35,10 +52,16 @@ export function Header() {
   function closeMenu() {
     cancelMenuClose();
     setActiveMegaMenu(null);
+    setManagedOpen("");
+    setNavHover(false);
   }
   function scheduleMenuClose() {
     cancelMenuClose();
-    closeTimer.current = setTimeout(() => setActiveMegaMenu(null), 180);
+    closeTimer.current = setTimeout(() => {
+      setActiveMegaMenu(null);
+      setManagedOpen("");
+      setNavHover(false);
+    }, 180);
   }
   useEffect(() => {
     setActiveMegaMenu(null);
@@ -62,6 +85,8 @@ export function Header() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
+        setManagedOpen("");
+        setNavHover(false);
         setActiveMegaMenu(null);
         setIsCurrencyOpen(false);
         setIsMobileMenuOpen(false);
@@ -73,7 +98,10 @@ export function Header() {
 
   return (
     <>
-      {activeMegaMenu && (
+      {(activeMegaMenu ||
+        (merchant.menuPublished &&
+          managedOpen &&
+          managedChildren.length > 0)) && (
         <button
           className="mega-backdrop"
           tabIndex={-1}
@@ -85,7 +113,11 @@ export function Header() {
       <header
         className="sticky top-0 z-40 bg-white border-b border-[#EAE6E4]"
         onPointerEnter={cancelMenuClose}
-        onPointerLeave={scheduleMenuClose}
+        onPointerLeave={() => {
+          scheduleMenuClose();
+          setNavHover(false);
+          setManagedOpen("");
+        }}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null))
             scheduleMenuClose();
@@ -115,49 +147,65 @@ export function Header() {
           <nav
             className="hidden lg:flex flex-1 min-w-0 ml-5 items-center gap-5 xl:gap-8 overflow-x-auto no-scrollbar py-2 mask-fade-right"
             aria-label="Primary store navigation"
+            onPointerEnter={() => setNavHover(true)}
+            onFocusCapture={() => setNavHover(true)}
           >
-            {MAIN_NAV_ITEMS.map((item) => {
-              const hasMega = Boolean(item.megaMenuType);
-              const isActive = hasMega && activeMegaMenu === item.megaMenuType;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onPointerEnter={() => {
-                    cancelMenuClose();
-                    setActiveMegaMenu(item.megaMenuType || null);
-                  }}
-                  onFocus={() => {
-                    cancelMenuClose();
-                    setActiveMegaMenu(item.megaMenuType || null);
-                  }}
-                  onClick={closeMenu}
-                  onKeyDown={(event) => {
-                    if (hasMega && event.key === "ArrowDown") {
-                      event.preventDefault();
+            {(merchant.menuPublished ? managedNav : MAIN_NAV_ITEMS).map(
+              (item) => {
+                const megaMenuType =
+                  "megaMenuType" in item ? item.megaMenuType : undefined;
+                const managedItem = "id" in item ? item : undefined;
+                const hasMega = merchant.menuPublished
+                  ? merchant.menus.some((m) => m.parentId === managedItem?.id)
+                  : Boolean(megaMenuType);
+                const isActive =
+                  hasMega &&
+                  (merchant.menuPublished
+                    ? managedOpen === managedItem?.id
+                    : activeMegaMenu === megaMenuType);
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onPointerEnter={() => {
                       cancelMenuClose();
-                      setActiveMegaMenu(item.megaMenuType || null);
-                      requestAnimationFrame(() =>
-                        document
-                          .querySelector<HTMLAnchorElement>(
-                            "#store-mega-menu a",
-                          )
-                          ?.focus(),
-                      );
-                    }
-                  }}
-                  aria-expanded={hasMega ? isActive : undefined}
-                  aria-controls={hasMega ? "store-mega-menu" : undefined}
-                  className={`text-[13px] whitespace-nowrap shrink-0 transition-colors py-1 border-b ${
-                    isActive
-                      ? "text-[#292929] border-[#292929] font-medium"
-                      : "text-[#292929] border-transparent hover:text-[#777777]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+                      setActiveMegaMenu(megaMenuType || null);
+                      if (managedItem) setManagedOpen(managedItem.id);
+                    }}
+                    onFocus={() => {
+                      cancelMenuClose();
+                      setActiveMegaMenu(megaMenuType || null);
+                      if (managedItem) setManagedOpen(managedItem.id);
+                    }}
+                    onClick={closeMenu}
+                    onKeyDown={(event) => {
+                      if (hasMega && event.key === "ArrowDown") {
+                        event.preventDefault();
+                        cancelMenuClose();
+                        setActiveMegaMenu(megaMenuType || null);
+                        if (managedItem) setManagedOpen(managedItem.id);
+                        requestAnimationFrame(() =>
+                          document
+                            .querySelector<HTMLAnchorElement>(
+                              "#store-mega-menu a",
+                            )
+                            ?.focus(),
+                        );
+                      }
+                    }}
+                    aria-expanded={hasMega ? isActive : undefined}
+                    aria-controls={hasMega ? "store-mega-menu" : undefined}
+                    className={`text-[13px] whitespace-nowrap shrink-0 transition-colors py-1 border-b ${
+                      isActive
+                        ? "text-[#292929] border-[#292929] font-medium"
+                        : "text-[#292929] border-transparent hover:text-[#777777]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              },
+            )}
           </nav>
 
           {/* Right: Currency + Search + Account + Bag */}
@@ -181,23 +229,25 @@ export function Header() {
 
               {isCurrencyOpen && (
                 <div className="absolute right-0 mt-2 w-36 bg-white border border-[#EAE6E4] shadow-md py-1 z-50">
-                  {Object.values(CURRENCIES).map((c) => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => {
-                        setCurrency(c.code as CurrencyCode);
-                        setIsCurrencyOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#FAF8F7] flex items-center justify-between ${
-                        currency === c.code
-                          ? "font-medium text-[#292929] bg-[#FAF8F7]"
-                          : "text-[#777777]"
-                      }`}
-                    >
-                      <span>{c.label}</span>
-                    </button>
-                  ))}
+                  {Object.values(CURRENCIES)
+                    .filter((c) => c.code === "BDT")
+                    .map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => {
+                          setCurrency(c.code as CurrencyCode);
+                          setIsCurrencyOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[#FAF8F7] flex items-center justify-between ${
+                          currency === c.code
+                            ? "font-medium text-[#292929] bg-[#FAF8F7]"
+                            : "text-[#777777]"
+                        }`}
+                      >
+                        <span>{c.label}</span>
+                      </button>
+                    ))}
                 </div>
               )}
             </div>
@@ -254,7 +304,40 @@ export function Header() {
         </div>
 
         {/* Desktop Mega Menu */}
-        <MegaMenu activeMenu={activeMegaMenu} onClose={closeMenu} />
+        <SaleBanner campaign={merchant.campaign} hovered={navHover} />
+        {!merchant.menuPublished && (
+          <MegaMenu activeMenu={activeMegaMenu} onClose={closeMenu} />
+        )}
+        {merchant.menuPublished &&
+          managedOpen &&
+          merchant.menus.some((m) => m.parentId === managedOpen) && (
+            <div
+              id="store-mega-menu"
+              className="managed-header-dropdown"
+              onMouseEnter={() => setManagedOpen(managedOpen)}
+            >
+              {Array.from(
+                new Set(managedChildren.map((m) => m.group || "Explore")),
+              ).map((group) => (
+                <div className="managed-header-group" key={group}>
+                  <h3>
+                    {group
+                      .replace(/Col\d/gi, "")
+                      .replace(/([a-z])([A-Z])/g, "$1 $2")
+                      .trim()}
+                  </h3>
+                  {managedChildren
+                    .filter((m) => (m.group || "Explore") === group)
+                    .map((m) => (
+                      <Link key={m.id} href={m.href} onClick={closeMenu}>
+                        {m.image && <img src={m.image} alt="" />}
+                        {m.label}
+                      </Link>
+                    ))}
+                </div>
+              ))}
+            </div>
+          )}
 
         {/* Mobile Navigation Drawer */}
         <MobileNavDrawer

@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { StoreProvider } from '@/providers/StoreProvider';
 import { ToastContainer } from '@/components/shared/ToastContainer';
+import {StorefrontTracker} from '@/components/shared/StorefrontTracker';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -63,6 +64,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <StoreProvider>
+          <StorefrontTracker />
           {children}
           <ToastContainer />
         </StoreProvider>

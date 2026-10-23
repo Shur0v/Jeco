@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ShoppingBag,
   Lock,
@@ -13,37 +13,40 @@ import {
   Search,
   CheckCircle2,
   Sparkles,
-} from 'lucide-react';
-import { useStore } from '@/hooks/useStore';
-import { SHIPPING_METHODS, SITE_CONFIG } from '@/config/site';
-import { PRIVATE_AREAS_ENABLED } from '@/config/features';
-import { DemoOrder, ShippingAddress } from '@/types/commerce';
+} from "lucide-react";
+import { useStore } from "@/hooks/useStore";
+import { SHIPPING_METHODS, SITE_CONFIG } from "@/config/site";
+import { PRIVATE_AREAS_ENABLED } from "@/config/features";
+import { completeOrder, recordEvent, getMerchant } from "@/lib/merchant-store";
+import { useMerchant } from "@/hooks/useMerchant";
+import { DemoOrder, ShippingAddress } from "@/types/commerce";
 import {
   createDemoOrderMeta,
   formatMoney,
   formatMoneyShort,
-} from '@/lib/format';
+} from "@/lib/format";
 
 const checkoutSchema = z.object({
-  email: z.string().min(1, 'Email or contact ID is required'),
+  email: z.string().min(1, "Email or contact ID is required"),
   marketingOptIn: z.boolean(),
   smsOptIn: z.boolean(),
-  country: z.string().min(1, 'Country is required'),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  country: z.string().min(1, "Country is required"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   company: z.string().optional(),
-  address: z.string().min(1, 'Shipping address is required'),
+  address: z.string().min(1, "Shipping address is required"),
   apartment: z.string().optional(),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State / Region is required'),
-  postalCode: z.string().min(1, 'ZIP / Postal code is required'),
-  phone: z.string().min(1, 'Phone number is required'),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State / Region is required"),
+  postalCode: z.string().min(1, "ZIP / Postal code is required"),
+  phone: z.string().min(1, "Phone number is required"),
   giftNote: z.string().optional(),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export function CheckoutView() {
+  const { data: merchant } = useMerchant();
   const router = useRouter();
   const {
     currency,
@@ -60,18 +63,19 @@ export function CheckoutView() {
   } = useStore();
 
   const [selectedShippingId, setSelectedShippingId] = useState<string>(
-    SHIPPING_METHODS[0].id
+    SHIPPING_METHODS[0].id,
   );
-  const [paymentOption, setPaymentOption] = useState<'demo-card' | 'demo-paypal'>(
-    'demo-card'
+  const [paymentOption, setPaymentOption] = useState<"bkash" | "nagad">(
+    "bkash",
   );
   const [wantsGiftNote, setWantsGiftNote] = useState(false);
-  const [promoInput, setPromoInput] = useState('');
+  const [promoInput, setPromoInput] = useState("");
   const [promoFeedback, setPromoFeedback] = useState<{
-    type: 'success' | 'error';
+    type: "success" | "error";
     text: string;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLock = React.useRef(false);
 
   const {
     register,
@@ -81,26 +85,35 @@ export function CheckoutView() {
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      email: session?.email || '',
+      email: session?.email || "",
       marketingOptIn: true,
       smsOptIn: false,
-      country: 'United States',
-      firstName: session?.firstName || '',
-      lastName: session?.lastName || '',
-      company: '',
-      address: session?.defaultAddress?.address || '',
-      apartment: '',
-      city: session?.defaultAddress?.city || '',
-      state: session?.defaultAddress?.state || 'California',
-      postalCode: session?.defaultAddress?.postalCode || '',
-      phone: session?.phone || '',
-      giftNote: '',
+      country: "Bangladesh",
+      firstName: session?.firstName || "",
+      lastName: session?.lastName || "",
+      company: "",
+      address: session?.defaultAddress?.address || "",
+      apartment: "",
+      city: session?.defaultAddress?.city || "",
+      state: session?.defaultAddress?.state || "Dhaka",
+      postalCode: session?.defaultAddress?.postalCode || "",
+      phone: session?.phone || "",
+      giftNote: "",
     },
   });
 
+  const shippingMethods = SHIPPING_METHODS.map((m) =>
+    m.id === "standard"
+      ? {
+          ...m,
+          price: merchant.settings.shipping,
+          freeOverSubtotal: merchant.settings.freeShipping,
+        }
+      : m,
+  );
   const selectedShipping =
-    SHIPPING_METHODS.find((m) => m.id === selectedShippingId) ||
-    SHIPPING_METHODS[0];
+    shippingMethods.find((m) => m.id === selectedShippingId) ||
+    shippingMethods[0];
 
   const shippingCost =
     selectedShipping.freeOverSubtotal &&
@@ -110,19 +123,19 @@ export function CheckoutView() {
 
   const finalTotal = Math.max(
     0,
-    Number((subtotal - discountAmount + shippingCost).toFixed(2))
+    Number((subtotal - discountAmount + shippingCost).toFixed(2)),
   );
 
   function handleFillDemoAddress() {
-    setValue('email', session?.email || 'elena.demo@example.com');
-    setValue('firstName', session?.firstName || 'Elena');
-    setValue('lastName', session?.lastName || 'Vance');
-    setValue('address', '450 Sutter Street, Suite 1200');
-    setValue('city', 'San Francisco');
-    setValue('state', 'California');
-    setValue('postalCode', '94108');
-    setValue('phone', '+1 (415) 555-0192');
-    showToast('Pre-filled demo shipping address');
+    setValue("email", session?.email || "elena.demo@example.com");
+    setValue("firstName", session?.firstName || "Elena");
+    setValue("lastName", session?.lastName || "Vance");
+    setValue("address", "24 Sample Road");
+    setValue("city", "Dhaka");
+    setValue("state", "Dhaka");
+    setValue("postalCode", "1207");
+    setValue("phone", "+880 1700 000000");
+    showToast("Pre-filled demo shipping address");
   }
 
   function handleApplyPromo(e: React.FormEvent) {
@@ -130,19 +143,25 @@ export function CheckoutView() {
     if (!promoInput.trim()) return;
     const res = applyPromoCode(promoInput);
     setPromoFeedback({
-      type: res.success ? 'success' : 'error',
+      type: res.success ? "success" : "error",
       text: res.message,
     });
-    if (res.success) setPromoInput('');
+    if (res.success) setPromoInput("");
   }
 
   const onSubmit = React.useCallback(
-    (values: CheckoutFormValues) => {
+    async (values: CheckoutFormValues) => {
+      if (isSubmitting || submitLock.current) return;
+      if (!getMerchant().settings[paymentOption]) {
+        showToast("That payment method is currently disabled.");
+        return;
+      }
       if (cartItems.length === 0) {
-        showToast('Your bag is empty.');
+        showToast("Your bag is empty.");
         return;
       }
       setIsSubmitting(true);
+      submitLock.current = true;
 
       const meta = createDemoOrderMeta();
       const shippingAddress: ShippingAddress = {
@@ -165,23 +184,36 @@ export function CheckoutView() {
         total: finalTotal,
         currency,
         paymentMethodLabel:
-          paymentOption === 'demo-card'
-            ? 'Demo Payment — No Charge (Simulated Card)'
-            : 'Demo PayPal Simulation — No Charge',
-        status: 'Confirmed (Demo)',
+          paymentOption === "bkash"
+            ? "bKash demo — No charge"
+            : "Nagad demo — No charge",
+        status: "Confirmed (Demo)",
       };
 
       try {
         window.sessionStorage.setItem(
-          'jco_last_demo_order',
-          JSON.stringify(newOrder)
+          "jco_last_demo_order",
+          JSON.stringify(newOrder),
         );
       } catch {}
 
+      try {
+        await completeOrder(newOrder);
+      } catch (error) {
+        showToast((error as Error).message);
+        setIsSubmitting(false);
+        submitLock.current = false;
+        return;
+      }
+      recordEvent({
+        path: "/checkout",
+        type: "order-complete",
+        label: "Completed demo order",
+      });
       recordDemoOrder(newOrder);
       clearCart();
       router.push(
-        `/checkout/success?order=${encodeURIComponent(meta.orderNumber)}`
+        `/checkout/success?order=${encodeURIComponent(meta.orderNumber)}`,
       );
     },
     [
@@ -200,7 +232,8 @@ export function CheckoutView() {
       clearCart,
       router,
       showToast,
-    ]
+      isSubmitting,
+    ],
   );
 
   return (
@@ -231,44 +264,24 @@ export function CheckoutView() {
       <div className="max-w-[1160px] mx-auto grid grid-cols-1 lg:grid-cols-12">
         {/* Left Column: Form Controls */}
         <div className="lg:col-span-7 px-4 sm:px-8 lg:pr-12 py-8 lg:py-10">
-          {/* Express Demo Checkout Bar */}
-          <div className="text-center mb-6">
-            <p className="text-[12px] text-[#777777] mb-3">
-              Express checkout
+          <div className="mb-6 bg-[#faf3ef] border border-[#eaded5] rounded-lg p-4">
+            <p className="text-sm">bKash & Nagad · BDT demo checkout</p>
+            <button
+              type="button"
+              onClick={handleFillDemoAddress}
+              className="text-xs underline mt-2"
+            >
+              Fill sample delivery details
+            </button>
+            <p className="text-xs text-[#7b685d] mt-2">
+              No real payment, PIN or wallet credentials required.
             </p>
-            <div className="grid grid-cols-3 gap-2.5">
-              <button
-                type="button"
-                onClick={handleFillDemoAddress}
-                className="bg-[#5A31F4] hover:opacity-95 text-white font-semibold text-[15px] py-3 rounded-md transition-opacity cursor-pointer"
-              >
-                shop
-              </button>
-              <button
-                type="button"
-                onClick={handleFillDemoAddress}
-                className="bg-[#FFC439] hover:opacity-95 text-[#003087] font-bold italic text-[15px] py-3 rounded-md transition-opacity cursor-pointer"
-              >
-                PayPal
-              </button>
-              <button
-                type="button"
-                onClick={handleFillDemoAddress}
-                className="bg-black hover:opacity-90 text-white font-medium text-[15px] py-3 rounded-md transition-opacity cursor-pointer"
-              >
-                G Pay
-              </button>
-            </div>
-
-            <div className="relative flex items-center justify-center my-6">
-              <div className="border-t border-[#EAE6E4] w-full" />
-              <span className="bg-white px-3 text-[11px] text-[#777777] uppercase">
-                OR
-              </span>
-            </div>
           </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="space-y-8"
+          >
             {/* Contact Section */}
             <section aria-labelledby="checkout-contact-heading">
               <div className="flex items-center justify-between mb-3">
@@ -278,25 +291,26 @@ export function CheckoutView() {
                 >
                   Contact
                 </h2>
-                {PRIVATE_AREAS_ENABLED && (!session ? (
-                  <Link
-                    href="/account/login"
-                    className="text-[12.5px] text-[#E7A7AA] underline hover:text-[#292929]"
-                  >
-                    Sign in
-                  </Link>
-                ) : (
-                  <span className="text-[12px] text-[#777777]">
-                    Logged in as {session.userId}
-                  </span>
-                ))}
+                {PRIVATE_AREAS_ENABLED &&
+                  (!session ? (
+                    <Link
+                      href="/account/login"
+                      className="text-[12.5px] text-[#E7A7AA] underline hover:text-[#292929]"
+                    >
+                      Sign in
+                    </Link>
+                  ) : (
+                    <span className="text-[12px] text-[#777777]">
+                      Logged in as {session.userId}
+                    </span>
+                  ))}
               </div>
 
               <div className="relative">
                 <input
                   type="email"
                   placeholder="Email"
-                  {...register('email')}
+                  {...register("email")}
                   className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] text-[#292929] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                 />
                 <HelpCircle className="w-4 h-4 text-[#777777] absolute right-3.5 top-1/2 -translate-y-1/2" />
@@ -310,7 +324,7 @@ export function CheckoutView() {
               <label className="flex items-center gap-2.5 mt-3 text-[12.5px] text-[#292929] cursor-pointer">
                 <input
                   type="checkbox"
-                  {...register('marketingOptIn')}
+                  {...register("marketingOptIn")}
                   className="w-4 h-4 accent-[#E7A7AA] rounded-xs"
                 />
                 <span>Email me with news and offers</span>
@@ -318,7 +332,10 @@ export function CheckoutView() {
             </section>
 
             {/* Delivery Section */}
-            <section aria-labelledby="checkout-delivery-heading" className="space-y-3">
+            <section
+              aria-labelledby="checkout-delivery-heading"
+              className="space-y-3"
+            >
               <div className="flex items-center justify-between">
                 <h2
                   id="checkout-delivery-heading"
@@ -342,9 +359,10 @@ export function CheckoutView() {
                   Country/Region
                 </label>
                 <select
-                  {...register('country')}
+                  {...register("country")}
                   className="w-full text-[13.5px] text-[#292929] bg-transparent focus:outline-none"
                 >
+                  <option value="Bangladesh">Bangladesh</option>
                   <option value="United States">United States</option>
                   <option value="Canada">Canada</option>
                   <option value="United Kingdom">United Kingdom</option>
@@ -360,7 +378,7 @@ export function CheckoutView() {
                   <input
                     type="text"
                     placeholder="First name"
-                    {...register('firstName')}
+                    {...register("firstName")}
                     className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                   />
                   {errors.firstName && (
@@ -373,7 +391,7 @@ export function CheckoutView() {
                   <input
                     type="text"
                     placeholder="Last name"
-                    {...register('lastName')}
+                    {...register("lastName")}
                     className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                   />
                   {errors.lastName && (
@@ -388,7 +406,7 @@ export function CheckoutView() {
               <input
                 type="text"
                 placeholder="Company (optional)"
-                {...register('company')}
+                {...register("company")}
                 className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
               />
 
@@ -397,7 +415,7 @@ export function CheckoutView() {
                 <input
                   type="text"
                   placeholder="Address"
-                  {...register('address')}
+                  {...register("address")}
                   className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                 />
                 <Search className="w-4 h-4 text-[#777777] absolute right-3.5 top-1/2 -translate-y-1/2" />
@@ -412,7 +430,7 @@ export function CheckoutView() {
               <input
                 type="text"
                 placeholder="Apartment, suite, etc. (optional)"
-                {...register('apartment')}
+                {...register("apartment")}
                 className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
               />
 
@@ -422,7 +440,7 @@ export function CheckoutView() {
                   <input
                     type="text"
                     placeholder="City"
-                    {...register('city')}
+                    {...register("city")}
                     className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                   />
                   {errors.city && (
@@ -435,7 +453,7 @@ export function CheckoutView() {
                   <input
                     type="text"
                     placeholder="State"
-                    {...register('state')}
+                    {...register("state")}
                     className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                   />
                   {errors.state && (
@@ -448,7 +466,7 @@ export function CheckoutView() {
                   <input
                     type="text"
                     placeholder="ZIP code"
-                    {...register('postalCode')}
+                    {...register("postalCode")}
                     className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                   />
                   {errors.postalCode && (
@@ -464,7 +482,7 @@ export function CheckoutView() {
                 <input
                   type="tel"
                   placeholder="Phone"
-                  {...register('phone')}
+                  {...register("phone")}
                   className="w-full border border-[#DCD8D5] rounded-md px-3.5 py-3 text-[13.5px] placeholder-[#777777] focus:outline-none focus:border-[#292929]"
                 />
                 <HelpCircle className="w-4 h-4 text-[#777777] absolute right-3.5 top-1/2 -translate-y-1/2" />
@@ -480,7 +498,7 @@ export function CheckoutView() {
                 <label className="flex items-center gap-2.5 text-[12.5px] text-[#292929] cursor-pointer">
                   <input
                     type="checkbox"
-                    {...register('smsOptIn')}
+                    {...register("smsOptIn")}
                     className="w-4 h-4 accent-[#E7A7AA]"
                   />
                   <span>Text me with news and offers</span>
@@ -500,7 +518,7 @@ export function CheckoutView() {
                   <textarea
                     rows={2}
                     placeholder="Write your complimentary gift message..."
-                    {...register('giftNote')}
+                    {...register("giftNote")}
                     className="w-full border border-[#DCD8D5] rounded-md p-3 text-[13px] focus:outline-none focus:border-[#292929]"
                   />
                 )}
@@ -516,20 +534,20 @@ export function CheckoutView() {
                 Shipping method
               </h2>
               <div className="border border-[#DCD8D5] rounded-md divide-y divide-[#EAE6E4]">
-                {SHIPPING_METHODS.map((method) => {
+                {shippingMethods.map((method) => {
                   const isFree =
                     method.freeOverSubtotal &&
                     subtotal >= method.freeOverSubtotal;
                   const priceLabel = isFree
-                    ? 'FREE'
+                    ? "FREE"
                     : formatMoneyShort(method.price, currency);
                   return (
                     <label
                       key={method.id}
                       className={`flex items-center justify-between p-3.5 cursor-pointer text-[13px] ${
                         selectedShippingId === method.id
-                          ? 'bg-[#FDF6F6]'
-                          : 'bg-white'
+                          ? "bg-[#FDF6F6]"
+                          : "bg-white"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -571,75 +589,29 @@ export function CheckoutView() {
                 processed.
               </p>
 
-              <div className="border border-[#DCD8D5] rounded-md overflow-hidden">
-                {/* Option 1: Demo Simulated Card */}
-                <label className="flex items-center justify-between px-4 py-3.5 bg-[#FCE6E6] border-b border-[#EAE6E4] cursor-pointer">
-                  <div className="flex items-center gap-2.5 text-[13px] font-medium text-[#292929]">
+              <div className="border border-[#e7d6cc] rounded-lg overflow-hidden">
+                {(["bkash", "nagad"] as const).map((method) => (
+                  <label
+                    key={method}
+                    className="flex items-center gap-3 px-4 py-4 border-b border-[#eee2d9] cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name="paymentOption"
-                      checked={paymentOption === 'demo-card'}
-                      onChange={() => setPaymentOption('demo-card')}
-                      className="accent-[#292929]"
+                      checked={paymentOption === method}
+                      disabled={!merchant.settings[method]}
+                      onChange={() => setPaymentOption(method)}
                     />
-                    <span>Demo Payment — No Charge (Simulated Card)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold">
-                    <span className="bg-[#1A1F71] text-white px-2 py-0.5 rounded-xs">
-                      VISA
+                    <span className="font-medium text-sm">
+                      {method === "bkash" ? "bKash" : "Nagad"}
                     </span>
-                    <span className="bg-[#EB001B] text-white px-2 py-0.5 rounded-xs">
-                      MC
+                    <span className="text-xs text-[#8c7666] ml-auto">
+                      {merchant.settings[method]
+                        ? "Demo simulation · No charge"
+                        : "Currently disabled"}
                     </span>
-                    <span className="bg-[#006FCF] text-white px-2 py-0.5 rounded-xs">
-                      AMEX
-                    </span>
-                  </div>
-                </label>
-
-                {paymentOption === 'demo-card' && (
-                  <div className="p-4 bg-[#F7F7F7] space-y-3 border-b border-[#EAE6E4]">
-                    <div className="bg-white border border-[#EAE6E4] rounded-md px-3.5 py-2.5 flex items-center justify-between text-[12.5px] text-[#555555]">
-                      <span>
-                        4242 4242 4242 4242 · Demo card
-                      </span>
-                      <Lock className="w-4 h-4 text-[#777777]" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-white border border-[#EAE6E4] rounded-md px-3.5 py-2.5 text-[12.5px] text-[#777777]">
-                        Expiration: 12 / 30
-                      </div>
-                      <div className="bg-white border border-[#EAE6E4] rounded-md px-3.5 py-2.5 text-[12.5px] text-[#777777]">
-                        Security code: •••
-                      </div>
-                    </div>
-                    <label className="flex items-center gap-2 text-[12px] text-[#292929] pt-1">
-                      <input
-                        type="checkbox"
-                        defaultChecked
-                        className="accent-[#E7A7AA]"
-                      />
-                      <span>Use shipping address as billing address</span>
-                    </label>
-                  </div>
-                )}
-
-                {/* Option 2: Demo PayPal */}
-                <label className="flex items-center justify-between px-4 py-3.5 bg-white cursor-pointer">
-                  <div className="flex items-center gap-2.5 text-[13px] text-[#292929]">
-                    <input
-                      type="radio"
-                      name="paymentOption"
-                      checked={paymentOption === 'demo-paypal'}
-                      onChange={() => setPaymentOption('demo-paypal')}
-                      className="accent-[#292929]"
-                    />
-                    <span>PayPal (Demo Simulation — No Charge)</span>
-                  </div>
-                  <span className="text-[12px] font-bold italic text-[#003087]">
-                    PayPal
-                  </span>
-                </label>
+                  </label>
+                ))}
               </div>
             </section>
 
@@ -649,7 +621,7 @@ export function CheckoutView() {
               disabled={isSubmitting || cartItems.length === 0}
               className="w-full bg-[#F5D3D3] hover:bg-[#E7A7AA] text-[#292929] hover:text-white font-medium text-[14px] py-4 rounded-md transition-colors cursor-pointer disabled:opacity-50"
             >
-              {isSubmitting ? 'Processing Demo Order...' : 'Pay now'}
+              {isSubmitting ? "Processing Demo Order..." : "Pay now"}
             </button>
 
             {/* Bottom Policy Links */}
@@ -695,7 +667,7 @@ export function CheckoutView() {
                       </p>
                       <p className="text-[11.5px] text-[#777777]">
                         {item.finish}
-                        {item.size ? ` / ${item.size}` : ''}
+                        {item.size ? ` / ${item.size}` : ""}
                       </p>
                     </div>
                   </div>
@@ -729,9 +701,9 @@ export function CheckoutView() {
               {promoFeedback && (
                 <p
                   className={`text-[11.5px] mt-1.5 ${
-                    promoFeedback.type === 'success'
-                      ? 'text-[#2E7D32]'
-                      : 'text-[#9E2A2B]'
+                    promoFeedback.type === "success"
+                      ? "text-[#2E7D32]"
+                      : "text-[#9E2A2B]"
                   }`}
                 >
                   {promoFeedback.text}
@@ -777,7 +749,7 @@ export function CheckoutView() {
                 <span className="text-[#292929]">Shipping</span>
                 <span className="text-[#777777] tabular-nums">
                   {shippingCost === 0
-                    ? 'Free'
+                    ? "Free"
                     : formatMoneyShort(shippingCost, currency)}
                 </span>
               </div>

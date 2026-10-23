@@ -1,13 +1,13 @@
 import { CurrencyCode, MetalFinish, ProductVisualSpec } from '@/types/commerce';
 import { CURRENCIES } from '@/config/site';
 
-export function formatMoney(amountInUSD: number, currency: CurrencyCode = 'USD'): string {
+export function formatMoney(amountInUSD: number, currency: CurrencyCode = 'BDT'): string {
   const cfg = CURRENCIES[currency] || CURRENCIES.USD;
   const converted = amountInUSD * cfg.rateFromUSD;
   return `${cfg.symbol}${converted.toFixed(2)} ${cfg.code}`;
 }
 
-export function formatMoneyShort(amountInUSD: number, currency: CurrencyCode = 'USD'): string {
+export function formatMoneyShort(amountInUSD: number, currency: CurrencyCode = 'BDT'): string {
   const cfg = CURRENCIES[currency] || CURRENCIES.USD;
   const converted = amountInUSD * cfg.rateFromUSD;
   return `${cfg.symbol}${converted.toFixed(2)}`;

@@ -33,6 +33,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <article
+      data-product-id={product.id}
       className="product-card group flex flex-col"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
