@@ -1,15 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hydrateCatalog, saveCatalogProduct } from "../lib/admin-catalog";
+import {initMerchant,changeMerchant,freshMerchantState,replaceMerchantSnapshot} from "../lib/merchant-store";
+import {IDBFactory} from "fake-indexeddb";
 import { commerceService } from "../commerce";
 
 describe("merchant edits reach the storefront", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.stubGlobal("indexedDB",new IDBFactory());
     const memory = new Map<string, string>();
     vi.stubGlobal("localStorage", {
       getItem: (key: string) => memory.get(key) ?? null,
       setItem: (key: string, value: string) => memory.set(key, value),
     });
     vi.stubGlobal("window", { localStorage, dispatchEvent: vi.fn() });
+    await initMerchant();
+    await replaceMerchantSnapshot(freshMerchantState());
     hydrateCatalog();
   });
   afterEach(() => {
@@ -17,9 +22,9 @@ describe("merchant edits reach the storefront", () => {
     hydrateCatalog();
     vi.unstubAllGlobals();
   });
-  it("persists an edited price and name across catalogue hydration, including variant prices", () => {
+  it("persists an edited price and name across catalogue hydration, including variant prices", async () => {
     const original = commerceService.catalog.getAllProducts()[0];
-    saveCatalogProduct({
+    await saveCatalogProduct({
       id: original.id,
       name: "Edited gold hoops",
       basePrice: 79,
@@ -38,9 +43,9 @@ describe("merchant edits reach the storefront", () => {
         .some((p) => p.id === original.id),
     ).toBe(true);
   });
-  it("removes sold-out items from the in-stock filter", () => {
+  it("removes sold-out items from the in-stock filter", async () => {
     const product = commerceService.catalog.getAllProducts()[0];
-    saveCatalogProduct({
+    await saveCatalogProduct({
       id: product.id,
       name: product.name,
       basePrice: product.basePrice,
@@ -58,7 +63,7 @@ describe("merchant edits reach the storefront", () => {
         ?.variants.every((v) => !v.inStock),
     ).toBe(true);
   });
-  it("archives and restores a product without losing its catalogue record", () => {
+  it("archives and restores a product without losing its catalogue record", async () => {
     const product = commerceService.catalog.getAllProducts()[0];
     const update = {
       id: product.id,
@@ -66,35 +71,24 @@ describe("merchant edits reach the storefront", () => {
       basePrice: product.basePrice,
       inStock: product.inStock,
     };
-    saveCatalogProduct({ ...update, hidden: true });
+    await saveCatalogProduct({ ...update, hidden: true });
     expect(
       commerceService.catalog
         .getProductsForCollection("shop-all")
         .some((p) => p.id === product.id),
     ).toBe(false);
-    saveCatalogProduct({ ...update, hidden: false });
+    await saveCatalogProduct({ ...update, hidden: false });
     expect(commerceService.catalog.getProductById(product.id)).toBeDefined();
   });
-  it("accepts merchant-created discount codes and honours their minimum spend", () => {
-    localStorage.setItem(
-      "jco_admin_discounts_v1",
-      JSON.stringify([
-        {
-          code: "NEW15",
-          description: "15% off",
-          discountType: "percentage",
-          value: 15,
-          minSubtotal: 50,
-        },
-      ]),
-    );
+  it("accepts merchant-created discount codes and honours their minimum spend", async () => {
+    await changeMerchant(s=>{s.discounts=[{id:'new15',active:true,code:'NEW15',description:'15% off',discountType:'percentage',value:15,minSubtotal:50}];});
     expect(
       commerceService.promotions.validatePromoCode("new15", 100),
     ).toMatchObject({ valid: true, discountAmount: 15 });
     expect(
       commerceService.promotions.validatePromoCode("NEW15", 40).valid,
     ).toBe(false);
-    localStorage.setItem("jco_admin_discounts_v1", "[]");
+    await changeMerchant(s=>{s.discounts=[];});
     expect(
       commerceService.promotions.validatePromoCode("NEW15", 100).valid,
     ).toBe(false);

@@ -1,4 +1,5 @@
 "use client";
+import {previewServices} from "@/commerce/browser-services";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -97,7 +98,7 @@ export function CheckoutView() {
       city: session?.defaultAddress?.city || "",
       state: session?.defaultAddress?.state || "Dhaka",
       postalCode: session?.defaultAddress?.postalCode || "",
-      phone: session?.phone || "",
+      phone: session?.defaultAddress?.phone || session?.phone || "",
       giftNote: "",
     },
   });
@@ -198,14 +199,14 @@ export function CheckoutView() {
       } catch {}
 
       try {
-        await completeOrder(newOrder);
+        await previewServices.orders.complete(newOrder);
       } catch (error) {
         showToast((error as Error).message);
         setIsSubmitting(false);
         submitLock.current = false;
         return;
       }
-      recordEvent({
+      previewServices.analytics.record({
         path: "/checkout",
         type: "order-complete",
         label: "Completed demo order",
@@ -618,6 +619,8 @@ export function CheckoutView() {
             {/* Submit Pay Now Button (Matches Screenshot 3 Soft Blush Button) */}
             <button
               type="submit"
+                  data-track-control="checkout-submit"
+                  data-track-label="Complete demo order"
               disabled={isSubmitting || cartItems.length === 0}
               className="w-full bg-[#F5D3D3] hover:bg-[#E7A7AA] text-[#292929] hover:text-white font-medium text-[14px] py-4 rounded-md transition-colors cursor-pointer disabled:opacity-50"
             >

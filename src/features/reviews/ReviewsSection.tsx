@@ -37,10 +37,10 @@ export function ReviewsSection({
     return combined;
   }, [productId, customReviews, sortOrder]);
 
-  function handleSubmitDemoReview(e: React.FormEvent) {
+  async function handleSubmitDemoReview(e: React.FormEvent) {
     e.preventDefault();
     if (!reviewerName.trim() || !comment.trim()) return;
-    addCustomReview({
+    const saved = await addCustomReview({
       productId: productId || 'prod-dome-huggie-hoop',
       productName: productName || 'Dome Huggie Hoop Earrings',
       productSlug: productSlug || 'dome-huggie-hoop-earrings',
@@ -51,6 +51,7 @@ export function ReviewsSection({
       rating,
       comment: comment.trim(),
     });
+    if(!saved)return;
     setReviewerName('');
     setComment('');
     setIsWritingReview(false);

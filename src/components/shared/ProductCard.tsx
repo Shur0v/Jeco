@@ -25,7 +25,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const primaryBadge = product.badges.find((b) => b !== 'SOLD OUT');
   const isSoldOut = !product.inStock || product.badges.includes('SOLD OUT');
 
-  const studioImg = getProductStudioSvg(
+  const studioImg = product.visualSpec.customImage ? product.images[product.variants.find(v=>v.finish===selectedFinish)?.imageIndex || 0] || product.images[0] : getProductStudioSvg(
     product.visualSpec,
     selectedFinish,
     isHovered ? 1 : 0
@@ -34,6 +34,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <article
       data-product-id={product.id}
+      data-track-section="Features"
       className="product-card group flex flex-col"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -50,6 +51,9 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={`${product.name} in ${selectedFinish}`}
             referrerPolicy="no-referrer"
             loading="lazy"
+            width={600}
+            height={600}
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         </Link>
@@ -79,6 +83,9 @@ export function ProductCard({ product }: ProductCardProps) {
             e.stopPropagation();
             toggleWishlist(product.id);
           }}
+          data-track-control="product-wishlist"
+          data-track-label="Wishlist"
+
           aria-label={
             wishlisted
               ? `Remove ${product.name} from wishlist`
@@ -111,6 +118,8 @@ export function ProductCard({ product }: ProductCardProps) {
               e.stopPropagation();
               addToCart(product, { finish: selectedFinish, quantity: 1 });
             }}
+            data-track-control="product-add-to-bag"
+            data-track-label="Add to bag"
             aria-label={`Quick add ${product.name} (${selectedFinish}) to bag`}
             className="absolute bottom-2.5 left-2.5 w-7 h-7 rounded-full bg-white/95 text-[#292929] shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-[#292929] hover:text-white"
             title="Quick add to bag"

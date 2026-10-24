@@ -1,3 +1,7 @@
+import {localizeAssets} from "./local-assets";
+import { openPreviewDB } from './browser-db';
+import { readMerchantRecords, persistMerchantRecords } from './merchant-persistence';
+import { optimizeImage } from './image-optimization';
 import { Product, DemoOrder, PromoCode } from "@/types/commerce";
 import { MOCK_PRODUCTS } from "@/mocks/products";
 import { MOCK_PROMO_CODES } from "@/mocks/promotions";
@@ -24,6 +28,7 @@ export type Category = {
   slug: string;
   parentId?: string;
   hidden?: boolean;
+  aliases?: string[];
 };
 export type MenuEntry = {
   id: string;
@@ -88,6 +93,9 @@ export type AnalyticsEvent = {
   productId?: string;
   categoryId?: string;
   section?: string;
+  controlId?: string;
+  breadcrumb?: [string, string, string];
+  sessionId?: string;
 };
 export type Campaign = {
   enabled: boolean;
@@ -286,11 +294,11 @@ let initPromise: Promise<void> | undefined;
 let queue: Promise<unknown> = Promise.resolve();
 let revision = 0;
 let channel: BroadcastChannel | undefined;
-const listeners = new Set<() => void>();
+const listeners = new Set<(kind?: string) => void>();
 export const getMerchant = () => state;
 export const merchantReady = () => ready;
 export const merchantRevision = () => revision;
-export function subscribeMerchant(listener: () => void) {
+export function subscribeMerchant(listener: (kind?: string) => void) {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
@@ -298,8 +306,8 @@ export function subscribeMerchant(listener: () => void) {
 }
 function notify(broadcast = true, kind = "state") {
   revision++;
-  listeners.forEach((fn) => fn());
-  if (typeof window !== "undefined")
+  listeners.forEach((fn) => fn(kind));
+  if (kind !== "events" && typeof window !== "undefined")
     window.dispatchEvent(new Event("jco:catalog-update"));
   if (broadcast) channel?.postMessage(kind);
 }
@@ -319,39 +327,12 @@ async function readKey<T>(key: string): Promise<T | undefined> {
   }
 }
 async function readPersisted() {
-  const saved = await readKey<MerchantState>("state");
+  const saved = (await readMerchantRecords()) || (await readKey<MerchantState>("state"));
   const events = await readKey<AnalyticsEvent[]>("events");
-  return saved ? { ...saved, events: events || saved.events } : undefined;
+  return saved ? localizeAssets({ ...saved, events: events || saved.events }) : undefined;
 }
-function database(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("jco-merchant-preview", 2);
-    request.onupgradeneeded = () => {
-      if (!request.result.objectStoreNames.contains("records"))
-        request.result.createObjectStore("records");
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () =>
-      reject(
-        new Error("Browser storage is unavailable. Your change was not saved."),
-      );
-  });
-}
-async function persist(next: MerchantState) {
-  const db = await database();
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction("records", "readwrite");
-    tx.objectStore("records").put({ ...next, events: [] }, "state");
-    tx.objectStore("records").put(next.events, "events");
-    tx.oncomplete = () => resolve();
-    tx.onerror = () =>
-      reject(
-        new Error("Storage is full or unavailable. Your change was not saved."),
-      );
-    tx.onabort = () => reject(new Error("Storage could not save this change."));
-  });
-  db.close();
-}
+const database = openPreviewDB;
+const persist = persistMerchantRecords;
 export function initMerchant() {
   if (typeof window === "undefined") return Promise.resolve();
   return (initPromise ||= (async () => {
@@ -359,11 +340,8 @@ export function initMerchant() {
     if (saved) {
       state = { ...defaults(), ...saved };
       let upgraded = false;
-      if (!saved.discounts.length) {
-        state.discounts = defaults().discounts;
-        upgraded = true;
-      }
-      if (!saved.menuPublished && !saved.menus.some((m) => m.parentId)) {
+
+      if (!(await readKey("manifest")) && !saved.menuPublished && !saved.menus.some((m) => m.parentId)) {
         state.menus = defaults().menus;
         upgraded = true;
       }
@@ -413,9 +391,43 @@ export function initMerchant() {
         );
         if (settings.storeName) state.settings.name = settings.storeName;
         if (settings.email) state.settings.email = settings.email;
-      } catch {}
+      } catch { throw new Error("Legacy catalog data could not be migrated. Existing data was retained; export or repair it before retrying."); }
       await persist(state);
     }
+    const existing = new Set(state.products.map(p=>p.id));
+    const missing = MOCK_PRODUCTS.filter(p=>!existing.has(p.id) && !state.deleted.includes(p.id));
+    if (missing.length || !(await readKey("manifest"))) {
+      state.products.push(...missing.map(toBDT));
+      await persist(state);
+    }
+    if (!(await readKey('legacy-complete'))) {
+      const legacyOrders=JSON.parse(localStorage.getItem('jco_demo_orders_v1') || '[]') as DemoOrder[];
+      for(const order of legacyOrders)if(!state.orders.some(o=>o.id===order.id)){state.orders.push(order);state.orderDetails[order.id]=defaultOrderDetails(order);}
+      const legacyDiscounts=JSON.parse(localStorage.getItem('jco_admin_discounts_v1') || '[]') as PromoCode[];
+      for(const code of legacyDiscounts)if(!state.discounts.some(d=>d.code===code.code.toUpperCase()))state.discounts.push({...code,code:code.code.toUpperCase(),id:uid('discount'),active:true});
+      await persist(state);
+      const {writeRecords}=await import('./browser-db');await writeRecords([{store:'records',key:'legacy-complete',value:true}]);
+      localStorage.removeItem?.('jco_admin_catalog_v1');localStorage.removeItem?.('jco_admin_settings_v1');localStorage.removeItem?.('jco_admin_discounts_v1');
+    }
+    if (!(await readKey('media-optimized-v3'))) {
+      const optimized=new Map<string,string>();
+      const walk=async(value:any):Promise<any>=>{
+        if(typeof value==='string'&&value.startsWith('data:image/')){
+          if(!optimized.has(value))optimized.set(value,await optimizeImage(await (await fetch(value)).blob()));return optimized.get(value);
+        }
+        if(Array.isArray(value))return Promise.all(value.map(walk));
+        if(value&&typeof value==='object')return Object.fromEntries(await Promise.all(Object.entries(value).map(async([k,v])=>[k,await walk(v)])));
+        return value;
+      };
+      state=await walk(state);
+      state.products=state.products.map(p=>{
+        if(p.visualSpec.customImage)return p;
+        const images=[...new Set([...p.images,...p.lifestyleImages])];
+        return {...p,images,lifestyleImages:[],visualSpec:{...p.visualSpec,customImage:images[0]},variants:p.variants.map(v=>({...v,imageIndex:Math.max(0,images.indexOf(p.images[v.imageIndex || 0]))}))};
+      });
+      await persist(state);const {writeRecords}=await import('./browser-db');await writeRecords([{store:'records',key:'media-optimized-v3',value:true}]);
+    }
+    state = localizeAssets(state);
     ready = true;
     if (
       typeof BroadcastChannel !== "undefined" &&
@@ -423,12 +435,13 @@ export function initMerchant() {
     ) {
       channel = new BroadcastChannel("jco-merchant-changes");
       channel.onmessage = (event) => {
+        if(event.data === "replace") { window.location.reload();return; }
         queue = queue
           .then(async () => {
             if (event.data === "events") {
               const events = await readKey<AnalyticsEvent[]>("events");
               if (events) state = { ...state, events };
-              notify(false);
+              notify(false, "events");
               return;
             }
             const latest = await readPersisted();
@@ -537,6 +550,7 @@ export async function saveProduct(p: MerchantProduct) {
   validateProduct(p);
   const product = {
     ...p,
+    collections: [...p.collections.map(slug=>state.categories.find(c=>c.aliases?.includes(slug))?.slug || slug).filter(c=>!['new-arrivals','best-sellers','featured'].includes(c)),...(p.isNewArrival?['new-arrivals']:[]),...(p.isBestSeller?['best-sellers']:[]),...(p.isFeatured?['featured']:[])],
     basePrice: Math.min(...p.variants.map((v) => v.price)),
     compareAtPrice: p.variants.find(
       (v) => v.price === Math.min(...p.variants.map((x) => x.price)),
@@ -717,6 +731,7 @@ export function readMedia(file: File, video = false): Promise<string> {
           : "Images must be smaller than 5 MB.",
       ),
     );
+  if (file.type.startsWith("image/")) return optimizeImage(file);
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result));
@@ -734,13 +749,14 @@ export function campaignActive(c = state.campaign) {
 }
 export function recordEvent(event: Omit<AnalyticsEvent, "id" | "at">) {
   if (!ready) return;
+  const captured = { ...event, id: uid("event"), at: new Date().toISOString() };
   const task = queue.then(async () => {
     const work = async () => {
       const previous =
         (await readKey<AnalyticsEvent[]>("events")) || state.events;
       const events = [
         ...previous,
-        { ...event, id: uid("event"), at: new Date().toISOString() },
+        captured,
       ].slice(-20000);
       const db = await database();
       try {
@@ -761,5 +777,28 @@ export function recordEvent(event: Omit<AnalyticsEvent, "id" | "at">) {
       await navigator.locks.request("jco-merchant-write", work);
     else await work();
   });
-  queue = task.catch(() => {});
+  queue = task.catch((e) => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("jco:storage-error", { detail: (e as Error).message || "Analytics could not be saved." })); });
+}
+
+export async function replaceMerchantSnapshot(next: MerchantState) {
+  await changeMerchant(s => { Object.keys(s).forEach(k=>delete (s as any)[k]); Object.assign(s,next); });
+}
+export function freshMerchantState(): MerchantState { const s=defaults(); s.products=MOCK_PRODUCTS.map(toBDT); return s; }
+
+export async function flushMerchantWrites() { await queue; }
+
+export async function publishNavigation(categories:Category[],menus:MenuEntry[]) {
+  await changeMerchant(s=>{
+    const ids=new Set(categories.map(c=>c.id)), menuIds=new Set(menus.map(m=>m.id));
+    if(ids.size!==categories.length || categories.some(c=>!c.name.trim()||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(c.slug)||c.parentId&&!ids.has(c.parentId)))throw new Error('Choose valid categories and parent connections.');
+    for(const category of categories){let node:Category|undefined=category;const seen=new Set<string>();while(node?.parentId){if(seen.has(node.id))throw new Error('Categories cannot form a cycle.');seen.add(node.id);node=categories.find(c=>c.id===node?.parentId);}if(seen.size>1)throw new Error('Use a category and one subcategory level.');}
+    for(const previous of s.categories.filter(c=>!ids.has(c.id))){const linked=s.products.filter(p=>p.category===previous.id||p.subcategoryId===previous.id||[previous.slug,...(previous.aliases||[])].some(slug=>p.collections.includes(slug)));if(linked.length)throw new Error('Move these products to another category before deleting this category.');}
+    const nextCategories=categories.map(c=>{const previous=s.categories.find(p=>p.id===c.id);return {...c,aliases:[...new Set([...(previous?.aliases||[]),...(c.aliases||[]),...(previous&&previous.slug!==c.slug?[previous.slug]:[])])].filter(slug=>slug!==c.slug)};});
+    const routes=nextCategories.flatMap(c=>[c.slug,...(c.aliases||[])]);if(new Set(routes).size!==routes.length)throw new Error('A category URL is already in use, including a previous URL.');
+    if(menus.some(m=>!m.label.trim()||!m.href.startsWith('/')||m.categoryId&&!ids.has(m.categoryId)||m.parentId&&!menuIds.has(m.parentId)))throw new Error('Reconnect menu destinations before publishing.');
+    for(const menu of menus){let node:MenuEntry|undefined=menu;const seen=new Set<string>();while(node?.parentId){if(seen.has(node.id))throw new Error('Menus cannot form a cycle.');seen.add(node.id);node=menus.find(m=>m.id===node?.parentId);}}
+    const renames=new Map(s.categories.flatMap(old=>{const next=nextCategories.find(c=>c.id===old.id);return next&&next.slug!==old.slug?[[old.slug,next.slug] as const]:[];}));
+    s.products=s.products.map(p=>({...p,collections:p.collections.map(slug=>renames.get(slug)||slug)}));
+    s.categories=nextCategories;s.menus=menus.map(m=>{const c=nextCategories.find(c=>c.id===m.categoryId);return c?{...m,href:`/collections/${c.slug}`}:m;});s.menuPublished=true;
+  });
 }

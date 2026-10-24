@@ -1,7 +1,9 @@
 import { MetalFinish, ProductVisualSpec } from "@/types/commerce";
-import photoData from "@/mocks/photos.json";
+import {localAsset,localizeAssets} from "./local-assets";
+import rawPhotos from "@/mocks/photos.json";
 
-// Online sample photography. Keep this mapping isolated for the final asset swap.
+const photoData=localizeAssets(rawPhotos);
+// Locally optimized sample photography. Keep this mapping isolated for the final asset swap.
 const products = photoData.products as Record<string, string[]>;
 const names = photoData.byName as Record<string, string[]>;
 const finishes = photoData.finishes as Record<string, Record<string, string>>;
@@ -13,7 +15,7 @@ export function getProductStudioSvg(
   _viewIndex = 0,
   _bgHex?: string,
 ): string {
-  if (spec.customImage) return spec.customImage;
+  if (spec.customImage) return localAsset(spec.customImage);
   const finish = finishOverride || spec.primaryFinish;
   const finishPhotos =
     (spec.photoKey && finishes[spec.photoKey]) || finishes[spec.shape];
@@ -64,5 +66,5 @@ export function getEditorialBannerSvg(type: Banner): string {
     "demi-fine": editorialPhotos.demi,
     "luxury-14k": editorialPhotos.luxury,
   };
-  return banners[type];
+  return localAsset(banners[type]);
 }

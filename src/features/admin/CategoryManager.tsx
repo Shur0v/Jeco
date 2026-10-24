@@ -1,4 +1,5 @@
 "use client";
+import {previewServices} from "@/commerce/browser-services";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -143,20 +144,9 @@ export function CategoryManager({
         throw new Error(
           "Menu links need a label and a storefront path beginning with /.",
         );
-      await changeMerchant((s) => {
-        s.categories = cats;
-        s.menus = menus.map((m) => {
-          const category = cats.find((c) => c.id === m.categoryId);
-          return category ? { ...m, href: `/collections/${category.slug}` } : m;
-        });
-        s.menuPublished = true;
-      });
-      setMenus(
-        menus.map((m) => {
-          const category = cats.find((c) => c.id === m.categoryId);
-          return category ? { ...m, href: `/collections/${category.slug}` } : m;
-        }),
-      );
+      await previewServices.content.publishNavigation(cats,menus);
+      const published=await previewServices.content.get();
+      setCats(published.categories);setMenus(published.menus);
       setSaved(true);
       setError("");
     } catch (e) {
@@ -565,7 +555,7 @@ export function CategoryManager({
                     try {
                       if (e.target.files?.[0])
                         updateMenu({
-                          image: await readMedia(e.target.files[0]),
+                          image: await previewServices.media.upload(e.target.files[0]),
                         });
                     } catch (e) {
                       setError((e as Error).message);

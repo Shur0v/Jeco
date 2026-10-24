@@ -331,16 +331,16 @@ export function AccountDashboardView() {
           {tab === "profile" && (
             <form
               className="workspace-panel workspace-form"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 const f = new FormData(e.currentTarget);
-                updateDemoProfile({
+                const saved = await updateDemoProfile({
                   firstName: String(f.get("firstName")).trim(),
                   lastName: String(f.get("lastName")).trim(),
                   birthDate: String(f.get("birthDate")),
                   phone: String(f.get("phone")),
                 });
-                setFeedback("Your account details have been saved.");
+                setFeedback(saved ? "Your account details have been saved." : "Your changes could not be saved. Please retry.");
               }}
             >
               <h2>PERSONAL DETAILS</h2>
@@ -395,12 +395,12 @@ export function AccountDashboardView() {
               </p>
               <form
                 className="workspace-panel workspace-form"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   const f = new FormData(e.currentTarget);
                   const address = Object.fromEntries(f.entries());
-                  updateDemoProfile({ defaultAddress: address });
-                  setFeedback("Your delivery address has been saved.");
+                  const saved = await updateDemoProfile({ defaultAddress: address });
+                  setFeedback(saved ? "Your delivery address has been saved." : "Your changes could not be saved. Please retry.");
                 }}
               >
                 <h2>
@@ -477,7 +477,7 @@ export function AccountDashboardView() {
                     <select
                       name="country"
                       defaultValue={
-                        session.defaultAddress?.country || "United States"
+                        session.defaultAddress?.country || "Bangladesh"
                       }
                     >
                       {[
@@ -510,9 +510,8 @@ export function AccountDashboardView() {
                     <button
                       type="button"
                       className="outline-button"
-                      onClick={() => {
-                        updateDemoProfile({ defaultAddress: {} });
-                        navigate("overview");
+                      onClick={async () => {
+                        if(await updateDemoProfile({ defaultAddress: {} }))navigate("overview");
                       }}
                     >
                       Remove address

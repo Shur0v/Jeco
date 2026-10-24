@@ -40,6 +40,7 @@ import { CategoryManager } from "./CategoryManager";
 import { HomepageManager } from "./HomepageManager";
 import { DiscountManager } from "./DiscountManager";
 import { Statistics } from "./Statistics";
+import { BrowserDataTools } from "./BrowserDataTools";
 import { Documentation } from "./Documentation";
 import { Inventory, OrderManager, Customers, sampleOrders } from "./Operations";
 import {
@@ -711,6 +712,8 @@ function StoreSettings() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   return (
+    <>
+    <BrowserDataTools />
     <form
       onSubmit={async (e) => {
         e.preventDefault();
@@ -845,5 +848,6 @@ function StoreSettings() {
         Save store settings
       </button>
     </form>
+    </>
   );
 }

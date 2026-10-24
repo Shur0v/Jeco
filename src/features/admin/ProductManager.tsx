@@ -1,4 +1,5 @@
 "use client";
+import {previewServices} from "@/commerce/browser-services";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -12,6 +13,7 @@ import {
   Eye,
   Save,
 } from "lucide-react";
+import {reorderProductMedia} from "@/lib/product-media";
 import { useMerchant } from "@/hooks/useMerchant";
 import { useStore } from "@/hooks/useStore";
 import {
@@ -181,7 +183,7 @@ export function ProductManager({
     setBusy(true);
     try {
       const urls = await Promise.all(
-        Array.from(files).map((f) => readMedia(f)),
+        Array.from(files).map((f) => previewServices.media.upload(f)),
       );
       patch({
         images: [...editing.images, ...urls],
@@ -223,7 +225,7 @@ export function ProductManager({
     await run(async () => {
       for (const id of selected) {
         const p = products.find((p) => p.id === id);
-        if (p) await saveProduct({ ...p, status });
+        if (p) await previewServices.catalog.save({ ...p, status });
       }
       setSelected([]);
     }, "Selected products updated.");
@@ -258,7 +260,7 @@ export function ProductManager({
               disabled={busy}
               onClick={() =>
                 run(async () => {
-                  await saveProduct(editing);
+                  await previewServices.catalog.save(editing);
                   setInitial(JSON.stringify(editing));
                 }, "Product saved. Published pieces are available in your storefront.")
               }
@@ -288,8 +290,8 @@ export function ProductManager({
                     onChange={(e) =>
                       patch({
                         name: e.target.value,
-                        ...(!editing.slug ||
-                        editing.slug === slugify(editing.name)
+                        ...(!data.products.some(p=>p.id===editing.id) && (!editing.slug ||
+                        editing.slug === slugify(editing.name))
                           ? { slug: slugify(e.target.value) }
                           : {}),
                       })
@@ -380,15 +382,9 @@ export function ProductManager({
                         aria-label="Move image earlier"
                         disabled={!i}
                         onClick={() => {
-                          const next = [...editing.images];
-                          [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                          patch({
-                            images: next,
-                            visualSpec: {
-                              ...editing.visualSpec,
-                              customImage: next[0],
-                            },
-                          });
+                          const order=editing.images.map((_,index)=>index);
+                          [order[i - 1],order[i]]=[order[i],order[i - 1]];
+                          patch(reorderProductMedia(editing,order));
                         }}
                       >
                         <ArrowUp size={15} />
@@ -397,15 +393,9 @@ export function ProductManager({
                         aria-label="Move image later"
                         disabled={i === editing.images.length - 1}
                         onClick={() => {
-                          const next = [...editing.images];
-                          [next[i + 1], next[i]] = [next[i], next[i + 1]];
-                          patch({
-                            images: next,
-                            visualSpec: {
-                              ...editing.visualSpec,
-                              customImage: next[0],
-                            },
-                          });
+                          const order=editing.images.map((_,index)=>index);
+                          [order[i + 1],order[i]]=[order[i],order[i + 1]];
+                          patch(reorderProductMedia(editing,order));
                         }}
                       >
                         <ArrowDown size={15} />
@@ -413,14 +403,7 @@ export function ProductManager({
                       <button
                         aria-label="Remove image"
                         onClick={() => {
-                          const next = editing.images.filter((_, n) => n !== i);
-                          patch({
-                            images: next,
-                            visualSpec: {
-                              ...editing.visualSpec,
-                              customImage: next[0],
-                            },
-                          });
+                          patch(reorderProductMedia(editing,editing.images.map((_,index)=>index).filter(index=>index!==i)));
                         }}
                       >
                         <Trash2 size={15} />
@@ -1050,7 +1033,7 @@ export function ProductManager({
                       o.items.some((i) => i.productId === deleting.id),
                     )
                   )
-                    await saveProduct({ ...deleting, status: "archived" });
+                    await previewServices.catalog.save({ ...deleting, status: "archived" });
                   else
                     await changeMerchant((s) => {
                       s.deleted.push(deleting.id);

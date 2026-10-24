@@ -7,8 +7,6 @@ import {useMerchant} from '@/hooks/useMerchant';
 export function AnnouncementBar() {
   const {data}=useMerchant();
   const [msgIndex, setMsgIndex] = useState(0);
-  const [announcement, setAnnouncement] = useState('');
-  useEffect(() => { try { setAnnouncement(JSON.parse(localStorage.getItem('jco_admin_settings_v1') || '{}').announcement || ''); } catch {} }, []);
 
   return (
     <div

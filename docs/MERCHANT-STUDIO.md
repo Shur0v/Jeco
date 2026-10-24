@@ -1,34 +1,44 @@
-# J&CO. merchant studio
+# J&CO. merchant studio and connected browser preview
 
-The interactive frontend preview is available at `/admin`. Panels use `/admin?tab=overview`, `orders`, `payments`, `products`, `inventory`, `statistics`, `customers`, `categories`, `homepage`, `discounts`, `documentation`, or `settings`. Navigation uses Next.js-integrated browser history without document reloads.
+The interactive frontend preview is available at `/admin`. Panels use `/admin?tab=overview`, `orders`, `payments`, `products`, `inventory`, `statistics`, `customers`, `categories`, `homepage`, `discounts`, `documentation`, or `settings`. Navigation supports shareable URLs and back/forward without document reloads.
 
-## Data and persistence
+## Data ownership
 
-`src/lib/merchant-store.ts` owns the versioned browser data model and replaceable persistence boundary. IndexedDB database `jco-merchant-preview` stores catalog records, uploaded image/video data, published navigation/homepage configuration, orders, payment details, stock adjustments and events. Changes are committed only after the transaction succeeds. A queued write path and Web Locks serialize same-browser writes; BroadcastChannel refreshes other open tabs. Upload limits are 5 MB for images and 25 MB for homepage media. Media is local to this browser and origin.
+IndexedDB `jco-merchant-preview` uses physical schema version 3. `browser-db.ts` provides transactional storage. MerchantState retains shape version 2 for compatibility; backup format has its own version 1.
 
-Existing catalog overrides are migrated when initializing the merchant store. Customer sessions/profiles and legacy local orders are retained. The catalog seeds sample BDT prices and exposes BDT as the only storefront currency. Legacy USD orders retain their purchase-time figures and are excluded from BDT summaries. Sample overview/order/customer data and sample statistics are explicitly separated from observed data.
+- `entities`: complete catalog records plus categories, menus, content, settings, orders and inventory records. Existing catalog products are seeded once as ordinary editable records, retaining IDs and overrides.
+- `media`: content-addressed uploaded media. Product/content records reference media IDs rather than containing repeated bytes.
+- `shopper`: customer profiles/addresses/wishlists, cart, recent views, custom reviews, newsletter and contact messages.
+- `records`: entity manifest, separate capped analytics events and migration markers. Previous state remains available as a migration recovery source.
 
-The catalog adapter merges seed and merchant-created records before filtering. Product routes resolve browser records after hydration rather than rejecting unknown local slugs on the server. Production SEO for browser-created products requires a shared server catalog later.
+The migration preserves existing data and legacy USD order snapshots, while BDT remains the only current storefront currency. Empty discount lists are preserved. Corrupt migrations and failed writes report errors instead of silently resetting data. Queued merchant writes and Web Locks serialize operations; BroadcastChannel updates other tabs. Customer profiles merge changed fields into current saved records. Shopper writes expose pending/errors and roll back to committed values when persistence fails. No password is stored.
+
+`src/commerce/contracts/domain.ts` defines domain service interfaces. `browser-services.ts` implements the current catalog, customer, cart, order, inventory, payment, promotion, content, media and analytics boundaries. Screens call these services for product saves, media, checkout, click capture, inventory and homepage publication. Complex local configuration/order editors still use merchant command orchestration; future server integration must map these commands to authenticated APIs.
 
 ## Owner workflows
 
-- Products: permanent ID, unique slug/SKU validation, variants, pricing, images, category/subcategory, costs, personalization, product flags, draft/published/archived state, duplication and guarded deletion. Order-linked records are archived rather than erased. Product forms warn about unsaved changes.
-- Inventory: per-variant quantities and availability, low-stock thresholds, reasoned adjustments and history. Demo checkout checks current stock/prices and commits the order and stock deductions together. Duplicate order IDs do not deduct twice.
-- Orders/payments: separate fulfillment, payment and return states; bKash/Nagad simulation; courier/tracking/notes; partial/full simulated refunds; explicit one-time restocking; history, print view and CSV exports. No real gateway request or real charge occurs.
-- Customers: cards with active-order and known-wishlist counts, with profile/order/address/payment/note tabs. A dash means another customer's wishlist is unavailable in the local dataset, rather than a fabricated zero.
-- Categories/menus: two-level visual tree, click-to-connect selectors, ordering controls and leaf drag connections. Deletion checks all products, including drafts/archives, child categories and menu destinations. A three-second clickable alert opens a linked product. Publishing updates both desktop and mobile storefront navigation.
-- Homepage: shares actual storefront sections inside a desktop/mobile editing canvas. Media, hero slides, gallery, product sources, campaign copy/links, marquee and content-review intervals are editable. Draft changes are separate until Publish. Review intervals create dashboard reminders, not automatic scheduled publishing.
-- Discounts/sales: targeted codes with dates, minimum spend and usage limits; campaign placement/layout, hover preview, 28–52 px height (40 px baseline), hex/color picker and background image. Checkout validates scope and computes discounts against eligible cart lines.
-- Documentation: searchable topic workflows, connected steps, hover/focus tips and links to each workspace screen.
+- Products: immutable IDs, stable existing slugs on rename, unique slug/SKU guards, ordered media/alt text, variant images/prices/costs/stock, personalization, flags and publication. Image reordering/removal preserves variant image ownership. Order-linked products are archived instead of erased.
+- Inventory: variant quantities, thresholds, reasoned adjustments and history; stale adjustment conflicts. Successful demo checkout checks price and quantity and atomically commits stock/order changes once per order ID.
+- Orders/payments: separate fulfillment/payment/return states, bKash/Nagad simulation, tracking/notes, partial/full refunds, explicit one-time restocking, timeline, print and CSV. Historical item/address/price snapshots remain independent of current product edits.
+- Customers: shared registered profiles and historical customers; cards show known wishlist/active-order counts. Profile/address edits appear across tabs. Duplicate registrations preserve the existing account by directing users to mock login.
+- Categories/menus: visual tree, parent links and ordering; deletion guards all product references, children and menu destinations. Publishing updates desktop/mobile navigation. Category renames retain previous URL aliases and migrate collection assignments, while product flag changes synchronize reserved collection membership.
+- Homepage: real storefront component canvas; desktop/mobile preview; media, section links/content, manual/automatic rows, marquee and review intervals. Draft/publish and undo/reset remain explicit.
+- Discounts/sales: targeted scheduled coupons; campaign layout, hover/always mode, height/color/background and isolated preview.
+- Statistics: browser-only observed data, separate sample week, charts/rankings, named button activity and chronological events. Breadcrumbs represent page → section → action. Both tables paginate at 25 rows, support filters/exports and drilldown. Old breadcrumbs remain Unavailable. The latest 20,000 events are retained; reports use Asia/Dhaka days.
+- Settings: shared shipping thresholds/provider flags/content and full local backup export/import/reset. Import validates references before replacement. Import/reset is transactional, confirmed, and reloads other tabs. Backups contain personal preview data and should be kept private.
 
-## Analytics
+## Media and performance
 
-One capture listener records storefront click activations, including non-link areas, without recording nested handlers twice. Page/product views are separate. Events use permanent product IDs, path without query values, section/category references and fixed safe labels. Admin routes and form input contents are excluded. Observed traffic is from this browser only; the latest 20,000 events are retained for this preview. Sample statistics are generated separately and never added to observed events. Reports use Asia/Dhaka calendar days and show zero-activity days.
+`public/media` holds optimized local WebP imagery; `asset-map.json` maps original URLs, including persisted older image references. Run `node scripts/optimize-assets.cjs` to prepare assets and update `docs/asset-audit.json`. All generated image files are below 1,000,000 bytes with neither dimension exceeding 1300px. Six missing original remote images use disclosed fallbacks from their own product photo groups. Animated GIF sources use static posters.
+
+New image uploads are resized/recompressed in the browser with aspect ratio/transparency preserved. Input caps are 5 MB for product images and 25 MB for homepage media; optimized image output is below 1 MB. MP4 video remains a separate 25 MB workflow. Hero loading is prioritized, lower imagery is lazy, and analytics-only updates do not rerender public catalog subscribers.
 
 ## Production boundary
 
-This is not an authenticated production administration system. Shared databases, hosted media, roles/permissions, secure gateway verification/webhooks, remote analytics, transactional emails and accounting reconciliation remain integration work. Store settings deliberately do not collect live payment credentials. Do not treat local preview records or sample dashboards as real business accounts.
+This remains a browser-local frontend preview. There is no shared database, production authorization, real gateway charge, external email delivery or cross-visitor analytics. Browser-created product/category routes resolve after hydration and require a shared server catalog for production metadata and other devices. PostgreSQL, media hosting, verified webhooks, real sessions/roles and VPS deployment belong to the next phase.
+
+The detailed PostgreSQL/API/VPS handoff and local agent instructions are intentionally excluded from Git. Keep those local documents current after functional/logical changes.
 
 ## Verification
 
-Run `npm test`, `npm run typecheck` and `npm run build`. The merchant tests exercise catalog creation/filtering, unique slugs/SKUs, category deletion constraints, persistence rollback, idempotent stock deductions, payment totals, discount eligibility and stable product IDs. Browser checks should cover uploaded-product publish/refresh/checkout, cross-tab orders, category alerts, homepage publishing, sale preview/color selection, customer modals, statistics, keyboard navigation and mobile sidebar behavior.
+Run `npm test`, `npm run typecheck` and `npm run build`. Tests cover catalog migration/editing, media ownership, stock/order idempotency, financial totals, discount eligibility, analytics grouping, local persistence rollback, backup validation/atomic aborts and every mapped image's dimensions/byte size. See `docs/testing/connected-preview-checklist.md` for browser evidence.

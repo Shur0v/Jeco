@@ -220,6 +220,10 @@ export function HomeMedia({
         className={className}
         src={block.media}
         alt={block.alt}
+        width={1300}
+        height={650}
+        decoding="async"
+        fetchPriority={block.id === "hero" ? "high" : "auto"}
         loading={block.id === "hero" ? "eager" : "lazy"}
       />
     </picture>

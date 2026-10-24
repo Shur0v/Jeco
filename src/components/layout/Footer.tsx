@@ -16,14 +16,15 @@ export function Footer() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  function handleSubscribe(e: React.FormEvent) {
+  async function handleSubscribe(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     if (!email.trim() || !email.includes('@')) {
       setError('Please enter a valid email address.');
       return;
     }
-    const ok = subscribeNewsletter(email);
+    const ok = await subscribeNewsletter(email);
+    if(!ok)setError("Your subscription could not be saved. Please retry.");
     if (ok) {
       setSubmitted(true);
       setEmail('');

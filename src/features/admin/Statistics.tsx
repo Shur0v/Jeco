@@ -1,4 +1,5 @@
 "use client";
+import { AnalyticsTables } from "./AnalyticsTables";
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Download } from "lucide-react";
 import { useMerchant } from "@/hooks/useMerchant";
@@ -19,17 +20,17 @@ function sampleEvents(): AnalyticsEvent[] {
     const at = new Date();
     at.setDate(at.getDate() - (i % 7));
     at.setHours(i % 24, i % 60, 0, 0);
+    const type=i%5===0?"page-view":i%7===0?"add-to-cart":i%3===0?"wishlist":"product-click";
+    const label=type==="wishlist"?"Wishlist":type==="add-to-cart"?"Add to bag":type==="page-view"?"Page view":"View product";
     return {
       id: `sample-${i}`,
       at: at.toISOString(),
       path: i % 3 ? `/products/${ps[i % 8]?.slug}` : "/",
-      type:
-        i % 5 === 0
-          ? "page-view"
-          : i % 7 === 0
-            ? "add-to-cart"
-            : "product-click",
-      label: "Sample interaction",
+      type,
+      label,
+      controlId:`sample-${type}`,
+      breadcrumb:[i%3?"Products":"Homepage",i%2?"Hero":"New Arrivals",label],
+      sessionId: `sample-session-${i % 7}`,
       productId: ps[i % 8]?.id,
       section: i % 2 ? "hero" : "new-arrivals",
     };
@@ -44,7 +45,7 @@ export function Statistics({
   end: string;
   editProduct: (id: string) => void;
 }) {
-  const { data } = useMerchant();
+  const { data } = useMerchant(true);
   const [sample, setSample] = useState(false);
   const [selected, setSelected] = useState("");
   const [page, setPage] = useState(0);
@@ -142,7 +143,7 @@ export function Statistics({
       <p className="studio-callout">
         {sample
           ? "Illustrative sample events only. These are not actual visitors or sales."
-          : "Local preview analytics: activity from this browser only. Admin clicks and sensitive form contents are excluded."}
+          : "Local preview analytics: activity from this browser only. The latest 20,000 events are retained. Admin clicks and sensitive form contents are excluded."}
       </p>
       <div className="studio-stat-grid">
         <Stat
@@ -272,38 +273,7 @@ export function Statistics({
           </Panel>
         ))}
       </div>
-      <Panel title="Recent interactions">
-        <div className="studio-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Interaction</th>
-                <th>Page</th>
-                <th>Product ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...filtered]
-                .reverse()
-                .slice(page * 10, page * 10 + 10)
-                .map((e) => (
-                  <tr key={e.id}>
-                    <td>
-                      {new Date(e.at).toLocaleString("en-GB", {
-                        timeZone: "Asia/Dhaka",
-                      })}
-                    </td>
-                    <td>{e.type}</td>
-                    <td>{e.path}</td>
-                    <td>{e.productId || "—"}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-        <Pager page={page} total={filtered.length} onChange={setPage} />
-      </Panel>
+      <AnalyticsTables events={filtered} period={`${start}:${end}:${sample}`} />
     </>
   );
 }

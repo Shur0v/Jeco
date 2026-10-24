@@ -1,4 +1,5 @@
 "use client";
+import {shopperStorage,flushShopper} from "@/lib/shopper-storage";
 import { useState } from "react";
 import { INFORMATION_PAGES } from "./content";
 import { useStore } from "@/hooks/useStore";
@@ -42,21 +43,22 @@ export function InformationView({ slug }: { slug: string }) {
         ) : (
           <form
             className="workspace-form mt-10"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               try {
                 const f = new FormData(e.currentTarget);
                 const messages = JSON.parse(
-                  localStorage.getItem("jco_contact_messages_v1") || "[]",
+                  shopperStorage.getItem("jco_contact_messages_v1") || "[]",
                 );
                 messages.push({
                   ...Object.fromEntries(f),
                   date: new Date().toISOString(),
                 });
-                localStorage.setItem(
+                shopperStorage.setItem(
                   "jco_contact_messages_v1",
                   JSON.stringify(messages),
                 );
+                await flushShopper();
                 setSent(true);
               } catch {
                 showToast("Unable to save your preview message.");

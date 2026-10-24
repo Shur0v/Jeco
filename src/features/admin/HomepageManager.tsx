@@ -1,4 +1,5 @@
 "use client";
+import {previewServices} from "@/commerce/browser-services";
 import { useEffect, useState } from "react";
 import {
   Save,
@@ -72,7 +73,7 @@ export function HomepageManager() {
     if (!file) return;
     try {
       patch({
-        [key]: await readMedia(file, key === "media"),
+        [key]: await previewServices.media.upload(file, key === "media"),
         ...(key === "media"
           ? { mediaType: file.type === "video/mp4" ? "video" : "image" }
           : {}),
@@ -96,10 +97,7 @@ export function HomepageManager() {
             ? new Date().toISOString()
             : b.updatedAt,
       }));
-      await changeMerchant((s) => {
-        s.home = publishedBlocks;
-        s.marquee = marquee;
-      });
+      await previewServices.content.publishHome({home:publishedBlocks,marquee});
       setBlocks(publishedBlocks);
       setUndoStack([]);
       setNotice("Homepage published. Your storefront now uses these sections.");
@@ -407,7 +405,7 @@ export function HomepageManager() {
                             try {
                               const urls = await Promise.all(
                                 Array.from(e.target.files || []).map((f) =>
-                                  readMedia(f),
+                                  previewServices.media.upload(f),
                                 ),
                               );
                               patch({

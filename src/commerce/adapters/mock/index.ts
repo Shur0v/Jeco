@@ -114,7 +114,7 @@ class MockCatalogService implements ICatalogService {
   }
 
   getCollectionBySlug(slug: string) {
-    const custom = getMerchant().categories.find((c) => c.slug === slug);
+    const custom = getMerchant().categories.find((c) => (c.slug === slug || c.aliases?.includes(slug)));
     if (custom)
       return {
         id: custom.id,
@@ -174,15 +174,16 @@ class MockCatalogService implements ICatalogService {
       base = catalog.filter(
         (p) =>
           p.collections.includes(collectionSlug) ||
+          p.collections.includes(getMerchant().categories.find(c=>c.aliases?.includes(collectionSlug))?.slug || collectionSlug) ||
           p.category ===
-            (getMerchant().categories.find((c) => c.slug === collectionSlug)
+            (getMerchant().categories.find((c) => (c.slug === collectionSlug || c.aliases?.includes(collectionSlug)))
               ?.id || collectionSlug) ||
           (Boolean(
-            getMerchant().categories.find((c) => c.slug === collectionSlug),
+            getMerchant().categories.find((c) => (c.slug === collectionSlug || c.aliases?.includes(collectionSlug))),
           ) &&
             (p as import("@/lib/merchant-store").MerchantProduct)
               .subcategoryId ===
-              getMerchant().categories.find((c) => c.slug === collectionSlug)
+              getMerchant().categories.find((c) => (c.slug === collectionSlug || c.aliases?.includes(collectionSlug)))
                 ?.id),
       );
     }
@@ -293,13 +294,7 @@ class MockPromotionService implements IPromotionService {
     items?: import("@/types/commerce").CartItem[],
   ) {
     const normalized = code.trim().toUpperCase();
-    let codes: import("@/types/commerce").PromoCode[] = MOCK_PROMO_CODES;
-    if (typeof window !== "undefined") {
-      try {
-        const saved = window.localStorage.getItem("jco_admin_discounts_v1");
-        if (saved) codes = JSON.parse(saved);
-      } catch {}
-    }
+    const codes: import("@/types/commerce").PromoCode[] = [];
     const merchant = getMerchant();
     const managed = merchant.discounts.find((p) => p.code === normalized);
     if (managed) {

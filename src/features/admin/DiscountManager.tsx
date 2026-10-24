@@ -1,4 +1,5 @@
 "use client";
+import {previewServices} from "@/commerce/browser-services";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Minus, Palette, Save, Trash2, Upload } from "lucide-react";
@@ -262,7 +263,7 @@ export function DiscountManager() {
                       if (e.target.files?.[0])
                         setCampaign({
                           ...campaign,
-                          image: await readMedia(e.target.files[0]),
+                          image: await previewServices.media.upload(e.target.files[0]),
                         });
                     } catch (e) {
                       setError((e as Error).message);

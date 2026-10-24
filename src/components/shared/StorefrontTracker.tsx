@@ -1,5 +1,7 @@
 "use client";
+import {previewServices} from "@/commerce/browser-services";
 import { useEffect } from "react";
+import { clickMetadata } from "@/lib/analytics";
 import { usePathname } from "next/navigation";
 import {
   initMerchant,
@@ -16,7 +18,7 @@ export function StorefrontTracker() {
         if (!active) return;
         const slug = path.startsWith("/products/") ? path.split("/").pop() : "";
         const product = merchantProducts().find((p) => p.slug === slug);
-        recordEvent({
+        previewServices.analytics.record({
           path,
           type: product ? "product-view" : "page-view",
           label: product ? "Product page" : "Page",
@@ -28,6 +30,7 @@ export function StorefrontTracker() {
       const el = event.target instanceof Element ? event.target : null;
       if (
         !el ||
+        !!el.closest('[data-no-track], [data-private-content]') || (!!el.closest('form') && !el.closest('[data-track-control]')) ||
         el.closest(
           '[data-no-track],input,textarea,select,[contenteditable="true"]',
         )
@@ -38,40 +41,21 @@ export function StorefrontTracker() {
       const productId =
         el.closest("[data-product-id]")?.getAttribute("data-product-id") ||
         merchantProducts().find((p) => href === `/products/${p.slug}`)?.id;
-      const action = button?.getAttribute("aria-label") || "";
-      const type = /wishlist/i.test(action)
-        ? "wishlist"
-        : /quick add|add .*to bag|add to bag/i.test(action)
-          ? "add-to-cart"
-          : href.startsWith("/products/")
-            ? "product-click"
-            : el.closest("nav")
-              ? "menu-click"
-              : el.closest("[data-home-section]")
-                ? "banner-click"
-                : "click";
-      recordEvent({
+      const metadata = clickMetadata(el,path);
+      let sessionId = sessionStorage.getItem('jco-analytics-session');
+      if (!sessionId) { sessionId=crypto.randomUUID(); sessionStorage.setItem('jco-analytics-session',sessionId); }
+      previewServices.analytics.record({
         path,
-        type,
-        label:
-          button?.getAttribute("data-track-label") ||
-          (/wishlist/i.test(action)
-            ? "Wishlist"
-            : type === "add-to-cart"
-              ? "Add to bag"
-              : button?.tagName === "A"
-                ? "Link"
-                : button
-                  ? "Button"
-                  : "Page area"),
+        type:metadata.type,
+        label:metadata.label,
+        controlId:metadata.controlId,
+        breadcrumb:metadata.breadcrumb,
+        sessionId,
         productId,
         categoryId: href.startsWith("/collections/")
           ? href.split("/")[2]?.split("?")[0]
           : undefined,
-        section:
-          el
-            .closest("[data-home-section]")
-            ?.getAttribute("data-home-section") || undefined,
+        section:metadata.section,
       });
     };
     document.addEventListener("click", capture, true);

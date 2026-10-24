@@ -14,10 +14,10 @@ export function LoginView() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    const result = loginDemo(userId, password);
+    const result = await loginDemo(userId, password);
     if (!result.success) {
       setError(
         result.error || 'Please enter both a User ID / Email and Password.'

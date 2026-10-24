@@ -1,4 +1,6 @@
 "use client";
+import { shopperStorage, subscribeShopper, initShopper } from "@/lib/shopper-storage";
+import {previewServices} from "@/commerce/browser-services";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -108,6 +110,7 @@ export function Inventory({
     p: string;
     v: string;
     qty: number;
+    expected: number;
     reason: string;
   } | null>(null);
   const [error, setError] = useState("");
@@ -138,29 +141,7 @@ export function Inventory({
         throw new Error(
           "Enter a whole stock quantity and an adjustment reason.",
         );
-      await changeMerchant((s) => {
-        const original = merchantProducts(undefined, true).find(
-          (p) => p.id === adjust.p,
-        )!;
-        let p = s.products.find((p) => p.id === original.id);
-        if (!p) {
-          p = structuredClone(original);
-          s.products.push(p);
-        }
-        const v = p.variants.find((v) => v.id === adjust.v)!;
-        s.adjustments.unshift({
-          id: uid("adjust"),
-          at: new Date().toISOString(),
-          productId: p.id,
-          variantId: v.id,
-          before: v.stockCount,
-          after: adjust.qty,
-          reason: adjust.reason.trim(),
-        });
-        v.stockCount = adjust.qty;
-        v.inStock = adjust.qty > 0;
-        p.inStock = p.variants.some((v) => v.inStock);
-      });
+      await previewServices.inventory.adjust({productId:adjust.p,variantId:adjust.v,quantity:adjust.qty,reason:adjust.reason,expectedQuantity:adjust.expected});
       setAdjust(null);
       setNotice("Stock updated and adjustment recorded.");
       setError("");
@@ -277,6 +258,7 @@ export function Inventory({
                           p: p.id,
                           v: v.id,
                           qty: v.stockCount,
+                          expected: v.stockCount,
                           reason: "",
                         });
                         setError("");
@@ -482,7 +464,7 @@ export function OrderManager({
         amount > chosen.total - draft.refunded
       )
         throw new Error("Enter an amount within the remaining paid balance.");
-      const refunded = draft.refunded + amount;
+      const refunded = Math.round((draft.refunded + amount)*100)/100;
       const next = {
         ...draft,
         refunded,
@@ -1036,7 +1018,7 @@ export function Customers({
   const [note, setNote] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [profiles] = useState<
+  const [profiles, setProfiles] = useState<
     Record<
       string,
       {
@@ -1050,11 +1032,15 @@ export function Customers({
     >
   >(() => {
     try {
-      return JSON.parse(localStorage.getItem("jco_demo_profiles_v1") || "{}");
+      return JSON.parse(shopperStorage.getItem("jco_demo_profiles_v1") || "{}");
     } catch {
       return {};
     }
   });
+  useEffect(() => {
+    const refresh = () => { try { setProfiles(JSON.parse(shopperStorage.getItem('jco_demo_profiles_v1') || '{}')); } catch {} };
+    void initShopper().then(refresh); return subscribeShopper(refresh);
+  }, []);
   const map = new Map<
     string,
     {

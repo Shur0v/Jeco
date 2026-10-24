@@ -27,9 +27,9 @@ export const MOCK_COLLECTIONS: Collection[] = [
       'Discover our latest drops in 14K solid gold flatbacks, sculpted huggies, and ocean-inspired demi-fine treasures.',
     breadcrumbs: [{ label: 'Home', href: '/' }, { label: 'New Arrivals', href: '/collections/new-arrivals' }],
     subCollections: [
-      { id: 'sub-1', title: 'SIMPLY BOLD', slug: 'statement-rings', image: 'https://www.jcojewellery.com/cdn/shop/files/W_ICONS_NEW_ARRIVALSimply_Bold.jpg?width=300' },
-      { id: 'sub-2', title: 'TIED TO LOVE', slug: 'best-sellers', image: 'https://www.jcojewellery.com/cdn/shop/files/W_ICONS_NEW_ARRIVALTied_To_Love.jpg?width=300' },
-      { id: 'sub-3', title: 'TITANIUM', slug: 'piercings', image: 'https://www.jcojewellery.com/cdn/shop/files/W_ICONS_ALL_EARRINGSTitanium.jpg?width=300' },
+      { id: 'sub-1', title: 'SIMPLY BOLD', slug: 'statement-rings', image: '/media/7539453f836879f4f942.webp' },
+      { id: 'sub-2', title: 'TIED TO LOVE', slug: 'best-sellers', image: '/media/9dc80aac6d362919b832.webp' },
+      { id: 'sub-3', title: 'TITANIUM', slug: 'piercings', image: '/media/5cc32b808d9f156fafcc.webp' },
       { id: 'sub-4', title: 'THE OCEAN', slug: 'hoop-earrings', image: getLifestyleModelSvg(3, 'THE OCEAN') },
       { id: 'sub-5', title: 'LE JARDIN', slug: '14k-gold', image: getLifestyleModelSvg(0, 'LE JARDIN') },
     ],

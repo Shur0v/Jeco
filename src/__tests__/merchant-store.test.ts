@@ -1,53 +1,10 @@
+import {IDBFactory,IDBDatabase} from "fake-indexeddb";
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import type { DemoOrder } from "@/types/commerce";
 
 function fakeDatabase() {
-  const records = new Map<string, unknown>();
-  let fail = false;
-  const database = {
-    objectStoreNames: { contains: () => true },
-    close: () => {},
-    transaction: () => {
-      const tx: any = {
-        objectStore: () => ({
-          get: (key: string) => {
-            const r: any = {};
-            queueMicrotask(() => {
-              r.result = records.get(key);
-              r.onsuccess?.();
-            });
-            return r;
-          },
-          put: (value: unknown, key: string) => {
-            queueMicrotask(() => {
-              if (fail) {
-                tx.onerror?.();
-                return;
-              }
-              records.set(key, structuredClone(value));
-              tx.oncomplete?.();
-            });
-          },
-        }),
-      };
-      return tx;
-    },
-  };
-  return {
-    api: {
-      open: () => {
-        const r: any = {};
-        queueMicrotask(() => {
-          r.result = database;
-          r.onsuccess?.();
-        });
-        return r;
-      },
-    },
-    fail: () => {
-      fail = true;
-    },
-  };
+  const api=new IDBFactory();
+  return {api,fail:()=>{vi.spyOn(IDBDatabase.prototype,'transaction').mockImplementation(()=>{throw new Error('Storage is full or unavailable. Your change was not saved.');});}};
 }
 async function setup() {
   const db = fakeDatabase();
@@ -114,7 +71,7 @@ function orderFor(
   };
 }
 beforeEach(() => vi.resetModules());
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {vi.restoreAllMocks();vi.unstubAllGlobals();});
 describe("merchant catalog and transaction integrity", () => {
   it("creates a published product that survives reload and collection filtering", async () => {
     const { store } = await setup();

@@ -18,10 +18,10 @@ export function RegisterView() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  function handleRegister(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    const res = registerDemo({
+    const res = await registerDemo({
       firstName,
       lastName,
       birthDate,

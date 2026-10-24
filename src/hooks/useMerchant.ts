@@ -5,15 +5,15 @@ import {
   initMerchant,
   subscribeMerchant,
 } from "@/lib/merchant-store";
-export function useMerchant() {
+export function useMerchant(includeEvents = false) {
   const [, render] = useState(0);
   const [error, setError] = useState("");
   useEffect(() => {
-    const unsub = subscribeMerchant(() => render((v) => v + 1));
+    const unsub = subscribeMerchant((kind) => { if (kind !== "events" || includeEvents) render((v) => v + 1); });
     initMerchant()
       .then(() => render((v) => v + 1))
       .catch((e) => setError(e.message));
     return unsub;
-  }, []);
+  }, [includeEvents]);
   return { data: getMerchant(), error };
 }

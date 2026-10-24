@@ -78,7 +78,7 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
 
   // Build 7-tile gallery matching Screenshot 5
   const galleryImages = useMemo(() => {
-    if(product.visualSpec.customImage) return product.images.map((src,i)=>({src,alt:(product as import('@/lib/merchant-store').MerchantProduct).imageAlt?.[i]||product.name}));
+    if(product.visualSpec.customImage) { const imageIndex=activeVariant.imageIndex || 0;return [imageIndex,...product.images.map((_,i)=>i).filter(i=>i!==imageIndex)].map(i=>({src:product.images[i],alt:(product as import('@/lib/merchant-store').MerchantProduct).imageAlt?.[i]||product.name})); }
     const studioMain = getProductStudioSvg(
       product.visualSpec,
       selectedFinish,
@@ -124,7 +124,7 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
         alt: `${product.name} Presentation Card Display`,
       },
     ];
-  }, [product, selectedFinish]);
+  }, [product, selectedFinish, activeVariant.imageIndex]);
 
   const relatedProducts = useMemo(
     () => commerceService.catalog.getRecommendationsForProduct(product.id, 4),
