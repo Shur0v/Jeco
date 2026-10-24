@@ -1,5 +1,6 @@
 'use client';
 
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
@@ -199,14 +200,14 @@ export function ProductDetailView({ product: initialProduct }: ProductDetailView
             {/* Price */}
             <div className="mt-2 flex items-center gap-3 text-[13.5px] tabular-nums">
               <span className="font-medium text-[#292929]">
-                {formatMoney(
+                <ProductPriceText>{formatMoney(
                   activeVariant?.price || product.basePrice,
                   currency
-                )}
+                )}</ProductPriceText>
               </span>
               {activeVariant?.compareAtPrice && (
                 <span className="text-[#777777] line-through">
-                  {formatMoney(activeVariant.compareAtPrice, currency)}
+                  <ProductPriceText>{formatMoney(activeVariant.compareAtPrice, currency)}</ProductPriceText>
                 </span>
               )}
             </div>

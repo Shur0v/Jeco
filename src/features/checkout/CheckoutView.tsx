@@ -1,4 +1,5 @@
 "use client";
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import {previewServices} from "@/commerce/browser-services";
 
 import React, { useState } from "react";
@@ -675,7 +676,7 @@ export function CheckoutView() {
                     </div>
                   </div>
                   <span className="text-[13px] text-[#292929] tabular-nums">
-                    {formatMoneyShort(item.price * item.quantity, currency)}
+                    <ProductPriceText>{formatMoneyShort(item.price * item.quantity, currency)}</ProductPriceText>
                   </span>
                 </div>
               ))}

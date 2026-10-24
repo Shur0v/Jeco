@@ -1,5 +1,6 @@
 'use client';
 
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -83,7 +84,7 @@ export function CheckoutSuccessView() {
                     </div>
                   </div>
                   <span className="tabular-nums text-[#292929]">
-                    {formatMoney(item.price * item.quantity, currency)}
+                    <ProductPriceText>{formatMoney(item.price * item.quantity, currency)}</ProductPriceText>
                   </span>
                 </div>
               ))}

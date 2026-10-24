@@ -1,4 +1,5 @@
 "use client";
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import {previewServices} from "@/commerce/browser-services";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -786,7 +787,7 @@ export function ProductManager({
               alt={editing.name}
             />
             <h2>{editing.name || "Your product name"}</h2>
-            <p>{moneyBDT(editing.variants[0]?.price || 0)}</p>
+            <p><ProductPriceText>{moneyBDT(editing.variants[0]?.price || 0)}</ProductPriceText></p>
             <p>{editing.description}</p>
             <p className="studio-caption">
               {editing.variants
@@ -960,7 +961,7 @@ export function ProductManager({
                   <td>
                     <Badge>{p.status}</Badge>
                   </td>
-                  <td>{moneyBDT(p.basePrice)}</td>
+                  <td><ProductPriceText>{moneyBDT(p.basePrice)}</ProductPriceText></td>
                   <td>
                     <Badge>
                       {p.inStock

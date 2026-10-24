@@ -1,5 +1,6 @@
 'use client';
 
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import React from 'react';
 import Link from 'next/link';
 import { Trash2, Plus, Minus, Lock } from 'lucide-react';
@@ -124,7 +125,7 @@ export function CartPageView() {
                           {item.size ? ` · Size: ${item.size}` : ''}
                         </p>
                         <p className="text-[12.5px] text-[#292929] mt-1 tabular-nums">
-                          {formatMoney(item.price, currency)}
+                          <ProductPriceText>{formatMoney(item.price, currency)}</ProductPriceText>
                         </p>
                       </div>
                     </div>
@@ -157,7 +158,7 @@ export function CartPageView() {
                       </div>
 
                       <span className="w-24 text-right text-[13.5px] font-medium text-[#292929] tabular-nums hidden sm:block">
-                        {formatMoney(item.price * item.quantity, currency)}
+                        <ProductPriceText>{formatMoney(item.price * item.quantity, currency)}</ProductPriceText>
                       </span>
 
                       <button

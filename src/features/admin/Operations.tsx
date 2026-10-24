@@ -1,5 +1,6 @@
 "use client";
 import { shopperStorage, subscribeShopper, initShopper } from "@/lib/shopper-storage";
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import {previewServices} from "@/commerce/browser-services";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -787,9 +788,9 @@ export function OrderManager({
                   <small>{i.variantId}</small>
                 </span>
                 <strong>
-                  {chosen.currency === "BDT"
+                  <ProductPriceText>{chosen.currency === "BDT"
                     ? moneyBDT(i.price * i.quantity)
-                    : `$${i.price * i.quantity}`}
+                    : `$${i.price * i.quantity}`}</ProductPriceText>
                 </strong>
               </div>
             ))}

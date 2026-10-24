@@ -1,5 +1,6 @@
 'use client';
 
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Heart, ShoppingBag } from 'lucide-react';
@@ -140,11 +141,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <div className="flex items-center gap-2 text-[11.5px] tabular-nums">
           <span className="text-[#292929]">
-            {formatMoney(product.basePrice, currency)}
+            <ProductPriceText>{formatMoney(product.basePrice, currency)}</ProductPriceText>
           </span>
           {product.compareAtPrice && (
             <span className="text-[#777777] line-through">
-              {formatMoney(product.compareAtPrice, currency)}
+              <ProductPriceText>{formatMoney(product.compareAtPrice, currency)}</ProductPriceText>
             </span>
           )}
         </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -192,7 +193,7 @@ export function CartDrawer() {
 
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-[12.5px] text-[#292929] tabular-nums">
-                        {formatMoney(item.price * item.quantity, currency)}
+                        <ProductPriceText>{formatMoney(item.price * item.quantity, currency)}</ProductPriceText>
                       </span>
 
                       <div className="flex items-center gap-3 text-[13px] text-[#292929]">
@@ -270,7 +271,7 @@ export function CartDrawer() {
                     {up.name}
                   </Link>
                   <span className="text-[11px] text-[#292929] mt-1 tabular-nums">
-                    {formatMoney(up.basePrice, currency)}
+                    <ProductPriceText>{formatMoney(up.basePrice, currency)}</ProductPriceText>
                   </span>
                 </div>
               ))}

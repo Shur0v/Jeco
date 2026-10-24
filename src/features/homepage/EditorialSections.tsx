@@ -1,4 +1,5 @@
 "use client";
+import { ProductPriceText } from "@/components/shared/ProductPriceText";
 import { useDragScroll } from "@/hooks/useDragScroll";
 import { useRef, useState } from "react";
 import Link from "next/link";
@@ -37,7 +38,7 @@ export function EditorialProduct({
       {caption && (
         <div className="editorial-product-caption">
           <h3>{product.name}</h3>
-          <p>৳{product.basePrice.toLocaleString("en-BD")}</p>
+          <p><ProductPriceText>{`৳${product.basePrice.toLocaleString("en-BD")}`}</ProductPriceText></p>
           <span>
             See product <ArrowUpRight size={13} />
           </span>
