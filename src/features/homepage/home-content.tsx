@@ -130,7 +130,7 @@ export const HOME_BLOCKS: HomeBlock[] = [
     title: "Style that stays with you.",
     text: "Thoughtfully chosen. Beautifully made. Discover everyday pieces with a little something extraordinary.",
     buttonLabel: "DISCOVER NOW",
-    interval: 7000,
+    interval: 3000,
     items: [
       {
         id: "everyday",
@@ -308,6 +308,7 @@ export const mergeHomeBlocks = (saved: HomeBlock[]) =>
     block.id === "hero"
       ? {
           ...block,
+          interval: 3000,
           items: block.items?.map((item) =>
             item.media === photos.hero ||
             (item.id === "everyday" && item.media === photos.demi)

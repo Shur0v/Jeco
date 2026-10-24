@@ -107,9 +107,10 @@ export function EditorialSettings({
           <Field label="Story interval (seconds)">
             <input
               type="number"
-              min={4}
+              min={block.id === "hero" ? 3 : 4}
               max={60}
-              value={(block.interval || 7000) / 1000}
+              readOnly={block.id === "hero"}
+              value={block.id === "hero" ? 3 : (block.interval || 7000) / 1000}
               onChange={(e) =>
                 patch({
                   interval: Math.min(

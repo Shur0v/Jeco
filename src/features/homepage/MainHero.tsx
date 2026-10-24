@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { HomeSection, HomeMedia, useHomeContent } from "./home-content";
 export function MainHero() {
   const home = useHomeContent(),
@@ -20,13 +20,11 @@ export function MainHero() {
           },
         ];
   const [index, setIndex] = useState(0),
-    [paused, setPaused] = useState(false),
     touch = useRef<number | null>(null);
   const active = index % slides.length,
     current = slides[active];
   useEffect(() => {
     if (
-      paused ||
       home.edit ||
       slides.length < 2 ||
       matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -34,10 +32,10 @@ export function MainHero() {
       return;
     const timer = setTimeout(
       () => setIndex((i) => (i + 1) % slides.length),
-      block.interval || 7000,
+      3000,
     );
     return () => clearTimeout(timer);
-  }, [index, paused, home.edit, slides.length, block.interval]);
+  }, [index, home.edit, slides.length]);
   const move = (delta: number) =>
     setIndex((i) => (i + delta + slides.length) % slides.length);
   return (
@@ -93,12 +91,6 @@ export function MainHero() {
           </button>
           <button aria-label="Next hero slide" onClick={() => move(1)}>
             <ChevronRight />
-          </button>
-          <button
-            aria-label={paused ? "Play hero slideshow" : "Pause hero slideshow"}
-            onClick={() => setPaused(!paused)}
-          >
-            {paused ? <Play size={15} /> : <Pause size={15} />}
           </button>
         </div>
       </section>

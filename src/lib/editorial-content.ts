@@ -66,9 +66,13 @@ export function validateEditorialBlocks(blocks: HomeBlock[]) {
       throw new Error("Use a local storefront destination beginning with /.");
     if (
       b.interval !== undefined &&
-      (!Number.isFinite(b.interval) || b.interval < 4000 || b.interval > 60000)
+      (!Number.isFinite(b.interval) ||
+        b.interval < (b.id === "hero" ? 3000 : 4000) ||
+        b.interval > 60000)
     )
-      throw new Error("Story intervals must be between 4 and 60 seconds.");
+      throw new Error(
+        "Story intervals must be between 3 seconds (hero) or 4 seconds (other stories) and 60 seconds.",
+      );
     if (b.items) {
       if (
         !b.items.length ||
