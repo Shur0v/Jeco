@@ -54,6 +54,15 @@ export function mergeEditorialBlocks(
         ...base.items.slice(1),
       ];
     }
+    if (
+      base.id === "personalized" &&
+      previous?.showcaseVersion !== 1 &&
+      base.showcaseVersion === 1
+    ) {
+      if (result.items?.length === 1)
+        result.items = [...result.items, ...(base.items || []).slice(1)];
+      result.showcaseVersion = 1;
+    }
     return result;
   });
 }

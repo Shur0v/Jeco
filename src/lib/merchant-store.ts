@@ -41,6 +41,7 @@ export type MenuEntry = {
   group?: string;
 };
 export type HomeBlock = {
+  showcaseVersion?: 1;
   eyebrow?: string;
   buttonLabel?: string;
   secondaryLabel?: string;

@@ -94,7 +94,7 @@ const topics = [
       ],
       [
         "Build a slider",
-        "Choose Main hero for the full-width image slider. Edit each image, mobile crop, heading, copy, destination and CTA. Reorder slides; the main hero automatically advances every 3 seconds. Test numbered pagination and the transparent glass previous/next arrows. There is no main-hero play/pause button; reduced motion disables autoplay. Personalized is now the separate split editorial showcase below Best sellers; its own images, stories and two featured product choices are independently editable.",
+        "Choose Main hero for the full-width image slider. Edit each image, mobile crop, heading, copy, destination and CTA. Reorder slides; the main hero automatically advances every 3 seconds. Test numbered pagination and the transparent glass previous/next arrows. There is no main-hero play/pause button; reduced motion disables autoplay. Personalized is the separate four-page split editorial showcase below Best sellers. It never auto-advances and has no play/pause control. Visitors use numbered pagination, arrows or swipe. Edit each page’s left image, heading, copy, destination and two featured products; each page displays its own product pair. Add, reorder or remove pages and publish changes.",
       ],
       [
         "Set product rows",

@@ -1,14 +1,8 @@
 "use client";
 import { useDragScroll } from "@/hooks/useDragScroll";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Pause,
-  Play,
-  ArrowUpRight,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { HomeSection, HomeMedia, useHomeContent } from "./home-content";
 import { HomeBlock } from "@/lib/merchant-store";
 import { useStore } from "@/hooks/useStore";
@@ -77,26 +71,9 @@ export function EditorialHero({ products }: { products: Product[] }) {
           buttonLabel: block.buttonLabel,
         })),
       ];
-  const [index, setIndex] = useState(0),
-    [paused, setPaused] = useState(false),
-    [interacting, setInteracting] = useState(false);
+  const [index, setIndex] = useState(0);
   const current = slides[index % slides.length];
   const touch = useRef<number | null>(null);
-  useEffect(() => {
-    if (
-      paused ||
-      interacting ||
-      home.edit ||
-      slides.length < 2 ||
-      matchMedia("(prefers-reduced-motion: reduce)").matches
-    )
-      return;
-    const timer = setInterval(
-      () => setIndex((i) => (i + 1) % slides.length),
-      Math.max(4000, block.interval || 7000),
-    );
-    return () => clearInterval(timer);
-  }, [slides.length, paused, interacting, block.interval, home.edit]);
   const featured = selectEditorialProducts(
     {
       ...block,
@@ -119,12 +96,6 @@ export function EditorialHero({ products }: { products: Product[] }) {
       <section
         aria-roledescription="carousel"
         aria-label="Jewellery stories"
-        onMouseEnter={() => setInteracting(true)}
-        onMouseLeave={() => setInteracting(false)}
-        onFocusCapture={() => setInteracting(true)}
-        onBlurCapture={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) setInteracting(false);
-        }}
         onTouchStart={(e) => {
           touch.current = e.touches[0].clientX;
         }}
@@ -194,13 +165,6 @@ export function EditorialHero({ products }: { products: Product[] }) {
           </span>
           <button aria-label="Next story" onClick={() => move(1)}>
             <ChevronRight size={17} />
-          </button>
-          <button
-            aria-label={paused ? "Play stories" : "Pause stories"}
-            aria-pressed={paused}
-            onClick={() => setPaused(!paused)}
-          >
-            {paused ? <Play size={14} /> : <Pause size={14} />}
           </button>
         </div>
       </section>

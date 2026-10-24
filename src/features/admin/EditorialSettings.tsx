@@ -102,7 +102,14 @@ export function EditorialSettings({
           </Field>
         </>
       )}
-      {["hero", "personalized"].includes(block.id) && (
+      {block.id === "personalized" && (
+        <p className="studio-caption">
+          Manual showcase: pages stay still until a visitor chooses a page or
+          arrow. Each page has its own left image, copy, destination and two
+          featured products.
+        </p>
+      )}
+      {block.id === "hero" && (
         <>
           <Field label="Story interval (seconds)">
             <input

@@ -118,3 +118,14 @@ it("preserves old personalized artwork when upgrading it to a split showcase", (
   expect(result.items?.[0].title).toBe("My personal edit");
   expect(result.productIds).toEqual(["my-product"]);
 });
+
+it("expands a saved single-page showcase once without restoring intentionally removed pages", () => {
+  const base:HomeBlock={...hero,id:"personalized",showcaseVersion:1,items:[hero.items![0],hero.items![1],{...hero.items![0],id:"three"},{...hero.items![0],id:"four"}]};
+  const old:HomeBlock={...base,showcaseVersion:undefined,items:[{...hero.items![0],title:"Saved page",media:"/custom-left.webp"}]};
+  const upgraded=mergeEditorialBlocks([base],[old])[0];
+  expect(upgraded.items).toHaveLength(4);
+  expect(upgraded.items![0]).toMatchObject({title:"Saved page",media:"/custom-left.webp"});
+  expect(upgraded.showcaseVersion).toBe(1);
+  const edited={...upgraded,items:upgraded.items!.slice(0,1)};
+  expect(mergeEditorialBlocks([base],[edited])[0].items).toHaveLength(1);
+});
