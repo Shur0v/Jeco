@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
+import './editorial.css';
 import { StoreProvider } from '@/providers/StoreProvider';
 import { ToastContainer } from '@/components/shared/ToastContainer';
 import {StorefrontTracker} from '@/components/shared/StorefrontTracker';

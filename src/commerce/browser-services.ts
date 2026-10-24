@@ -1,3 +1,4 @@
+import { validateEditorialBlocks } from "@/lib/editorial-content";
 /** Browser implementation. Future HTTP services implement contracts/domain.ts instead. */
 import type { PreviewServices } from './contracts/domain';
 import { publishNavigation,initMerchant,getMerchant,merchantProducts,saveProduct,completeOrder,changeMerchant,defaultOrderDetails,uid,readMedia,recordEvent,moneyBDT } from '@/lib/merchant-store';
@@ -30,7 +31,7 @@ export const previewServices:PreviewServices={
     },
   },
   promotions:{async list(){await ready();return getMerchant().discounts;},async save(discounts){await changeMerchant(s=>{s.discounts=discounts;});}},
-  content:{publishNavigation,async get(){await ready();const {home,menus,categories,campaign,marquee,settings}=getMerchant();return {home,menus,categories,campaign,marquee,settings};},async publishHome(input){await changeMerchant(s=>{s.home=input.home;s.marquee=input.marquee;});}},
+  content:{publishNavigation,async get(){await ready();const {home,menus,categories,campaign,marquee,settings}=getMerchant();return {home,menus,categories,campaign,marquee,settings};},async publishHome(input){validateEditorialBlocks(input.home);await changeMerchant(s=>{s.home=input.home;s.marquee=input.marquee;});}},
   media:{upload:readMedia},
   analytics:{async list(){await ready();return getMerchant().events;},record:recordEvent},
 };

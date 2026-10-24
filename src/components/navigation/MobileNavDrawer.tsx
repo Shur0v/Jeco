@@ -1,4 +1,5 @@
 "use client";
+import { useHomeContent } from "@/features/homepage/home-content";
 import { useMerchant } from "@/hooks/useMerchant";
 
 import React, { useState } from "react";
@@ -25,6 +26,7 @@ interface MobileNavDrawerProps {
 export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
   useDialogFocus(isOpen);
   const { data: merchant } = useMerchant();
+  const header = useHomeContent().id("header");
   const { currency, setCurrency, session, setIsSearchOpen, wishlistIds } =
     useStore();
   const [expandedGroup, setExpandedGroup] = useState<string | null>("category");
@@ -84,6 +86,7 @@ export function MobileNavDrawer({ isOpen, onClose }: MobileNavDrawerProps) {
             className="divide-y divide-[#EAE6E4]"
             aria-label="Mobile navigation"
           >
+            <div className="px-5 py-4 flex flex-wrap gap-x-5 gap-y-3">{header.items?.slice(1).map(item=><Link key={item.id} href={item.href} onClick={onClose} className="text-[11px] underline underline-offset-4">{item.title}</Link>)}</div>
             <div className="py-2">
               {merchant.menuPublished
                 ? merchant.menus

@@ -1,4 +1,5 @@
 "use client";
+import { mergeEditorialBlocks } from "@/lib/editorial-content";
 import { createContext, useContext } from "react";
 import { useMerchant } from "@/hooks/useMerchant";
 import { HomeBlock } from "@/lib/merchant-store";
@@ -8,12 +9,157 @@ import {
 } from "@/lib/artwork";
 export const HOME_BLOCKS: HomeBlock[] = [
   {
+    id: "header",
+    label: "Header navigation & featured products",
+    media: "",
+    alt: "Navigation",
+    href: "/collections/shop-all",
+    items: [
+      {
+        id: "shop",
+        title: "SHOP",
+        media: "",
+        alt: "",
+        href: "/collections/shop-all",
+      },
+      {
+        id: "new",
+        title: "NEW ARRIVALS",
+        media: "",
+        alt: "",
+        href: "/collections/new-arrivals",
+      },
+      {
+        id: "personalized",
+        title: "PERSONALIZED",
+        media: "",
+        alt: "",
+        href: "/collections/personalized",
+      },
+      {
+        id: "story",
+        title: "OUR STORY",
+        media: "",
+        alt: "",
+        href: "/pages/our-story",
+      },
+    ],
+  },
+  {
+    id: "explore",
+    label: "Explore jewellery · four tiles",
+    media: "",
+    alt: "Jewellery collection",
+    href: "/collections/shop-all",
+    eyebrow: "JEWELLERY",
+    title: "Explore our jewellery collection",
+    text: "Timeless rings, delicate necklaces and everyday favourites. Carefully chosen to become part of your story.",
+    collection: "all",
+  },
+  {
+    id: "lifestyle",
+    label: "Everyday stories · lifestyle rail",
+    media: "",
+    alt: "Jewellery worn your way",
+    href: "/collections/shop-all",
+    title: "Time-honoured finery,\nauthored by you.",
+    slides: [
+      photos.rings,
+      photos.demi,
+      photos.personalizedBanner,
+      photos.open,
+      photos.giftingRight,
+    ],
+    items: [
+      {
+        id: "story-rings",
+        title: "A signature, all your own",
+        media: photos.rings,
+        alt: "Gold rings styled for everyday",
+        href: "/collections/rings",
+      },
+      {
+        id: "story-earrings",
+        title: "Little details. Lasting impressions.",
+        media: photos.demi,
+        alt: "Earrings worn by our community",
+        href: "/collections/earrings",
+      },
+      {
+        id: "story-personal",
+        title: "Layers of your story",
+        media: photos.personalizedBanner,
+        alt: "Personalized gold necklace layers",
+        href: "/collections/personalized",
+      },
+      {
+        id: "story-open",
+        title: "Made for your everyday",
+        media: photos.open,
+        alt: "Delicate huggie earrings",
+        href: "/collections/open-huggies",
+      },
+      {
+        id: "story-gifts",
+        title: "For the moments that matter",
+        media: photos.giftingRight,
+        alt: "Thoughtful jewellery gifts",
+        href: "/collections/handmade",
+      },
+    ],
+  },
+  {
+    id: "collection-matrix",
+    label: "Signature collection · product matrix",
+    media: "",
+    alt: "Signature collection",
+    href: "/collections/rings",
+    title: "Collection: Everyday Icons",
+    family: "RINGS",
+    setting: "GOLD & SILVER",
+    buttonLabel: "FIND YOURS",
+    collection: "rings",
+  },
+  {
     id: "hero",
     label: "Main hero",
     media: photos.hero,
     alt: "Everyday jewellery",
     href: "/collections/flatback",
     slides: [],
+    title: "Style that stays with you.",
+    text: "Thoughtfully chosen. Beautifully made. Discover everyday pieces with a little something extraordinary.",
+    buttonLabel: "DISCOVER NOW",
+    interval: 7000,
+    items: [
+      {
+        id: "everyday",
+        title: "Your everyday, elevated.",
+        text: "Little luxuries for every version of you. Meet the pieces you will never want to take off.",
+        media: photos.demi,
+        alt: "Everyday gold earrings styled on a model",
+        href: "/collections/earrings",
+        buttonLabel: "EXPLORE EARRINGS",
+      },
+      {
+        id: "diamonds",
+        title: "A little brilliance. A lasting feeling.",
+        text: "Discover delicate details and sparkling favourites, made to be part of your story.",
+        media: photos.luxury,
+        alt: "Fine gold jewellery details",
+        href: "/collections/14k-gold",
+        buttonLabel: "DISCOVER GOLD",
+      },
+      {
+        id: "personal",
+        title: "Make it unmistakably yours.",
+        text: "Letters, layers and thoughtful gifts. Jewellery with a meaning only you can give it.",
+        media: photos.personalizedBanner,
+        alt: "Personalized initial necklaces",
+        href: "/collections/personalized",
+        buttonLabel: "MAKE IT PERSONAL",
+      },
+    ],
   },
   {
     id: "categories",
@@ -99,7 +245,12 @@ export const HOME_BLOCKS: HomeBlock[] = [
   },
   {
     id: "gallery",
-    label: "Community gallery",
+    label: "Community collage",
+    title: "@jcojewellery",
+    text: "FOLLOW US",
+    buttonLabel: "SIGN UP TO OUR NEWSLETTER",
+    secondaryLabel: "EXPLORE OUR COMMUNITY",
+    secondaryHref: "/pages/our-community",
     media: "",
     alt: "Community favourites",
     href: "/collections/shop-all",
@@ -139,6 +290,8 @@ export const HOME_BLOCKS: HomeBlock[] = [
     href: `/collections/${id}`,
   })),
 ];
+export const mergeHomeBlocks = (saved: HomeBlock[]) =>
+  mergeEditorialBlocks(HOME_BLOCKS, saved);
 export const HomeEditContext = createContext<{
   blocks: HomeBlock[];
   marquee?: { messages: string[]; speed: number; direction: "left" | "right" };
@@ -150,10 +303,7 @@ export function useHomeContent() {
   const blocks = edit?.blocks || data.home;
   return {
     id: (id: string) =>
-      ({
-        ...HOME_BLOCKS.find((b) => b.id === id),
-        ...blocks.find((b) => b.id === id),
-      }) as HomeBlock,
+      mergeHomeBlocks(blocks).find((b) => b.id === id) as HomeBlock,
     data: edit?.marquee ? { ...data, marquee: edit.marquee } : data,
     edit,
   };

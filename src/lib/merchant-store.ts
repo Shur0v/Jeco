@@ -41,6 +41,15 @@ export type MenuEntry = {
   group?: string;
 };
 export type HomeBlock = {
+  eyebrow?: string;
+  buttonLabel?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
+  family?: string;
+  setting?: string;
+  collection?: string;
+  interval?: number;
+  items?: { id: string; title: string; text?: string; media: string; mobileMedia?: string; alt: string; href: string; buttonLabel?: string; productIds?: string[] }[];
   source?: "featured" | "new-arrivals" | "best-sellers";
   id: string;
   label: string;

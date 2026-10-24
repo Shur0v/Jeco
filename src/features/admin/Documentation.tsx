@@ -63,7 +63,7 @@ const topics = [
       ],
       [
         "Connect navigation",
-        "Use Connect as storefront menu, or add a menu entry. Select its destination and parent menu to build desktop dropdowns and mobile nested links.",
+        "Use Connect as storefront menu, or add a menu entry. Set destination, parent and order; publish them to populate the Shop mega-menu and mobile nested navigation. The desktop menu has large category links, related subcategories and two shoppable product suggestions that change with the selected category. In Homepage → Header navigation, edit the compact top links and optionally choose the two featured products. Its first link opens Shop. Save header changes with Publish changes in Homepage. Festival offers retain their always-visible/hover-only settings in Discounts & Sales.",
       ],
       [
         "Preview & publish",
@@ -89,16 +89,16 @@ const topics = [
         "Open Homepage. Hover an image and choose Edit, or choose its section in the settings panel. Touch devices keep edit buttons visible.",
       ],
       [
-        "Replace media",
-        "Upload an image or MP4. Set mobile artwork, alternative text, and a poster for video. Your original layout is preserved.",
+        "Style the new editorial sections",
+        "Everyday stories is the horizontal lifestyle rail directly before Gifting. Edit each image, caption, alt text and destination; add/reorder/remove cards. Community collage uses the first six gallery images, with editable handle, heading, newsletter button and community link. Existing image/video sections remain available. Uploaded images are optimized to at most 1300px and under 1 MB.",
       ],
       [
         "Build a slider",
-        "In the hero, add slides, reorder them, or remove a slide. Gallery images can also be replaced individually.",
+        "Choose Main hero. Each story has its own title, description, desktop/mobile image, alt text, destination and button. Pick up to two products per story or use automatic suggestions. Reorder stories with arrows, set the interval (4–60 seconds), then test the numbered selector, arrows and pause control. Autoplay pauses on hover/focus and respects reduced motion.",
       ],
       [
         "Set product rows",
-        "Choose automatic flag-based selection or manually select products. New arrivals and best sellers remain independently editable.",
+        "Explore jewellery shows four pieces; Signature collection shows up to sixteen. Select a collection slug for automatic products or choose products manually in the desired order. Edit the matrix family/setting labels and button. New arrivals and best sellers keep their existing independent flag-based/manual selection.",
       ],
       [
         "Tune the marquee",

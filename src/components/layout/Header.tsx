@@ -1,28 +1,25 @@
 "use client";
-
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, User, ShoppingBag, Menu, ChevronDown } from "lucide-react";
 import { CURRENCIES, MAIN_NAV_ITEMS } from "@/config/site";
 import { useStore } from "@/hooks/useStore";
 import { CurrencyCode } from "@/types/commerce";
-import { MegaMenu } from "@/components/navigation/MegaMenu";
 import { MobileNavDrawer } from "@/components/navigation/MobileNavDrawer";
 import { PRIVATE_AREAS_ENABLED } from "@/config/features";
 import { usePathname } from "next/navigation";
-
 import { useMerchant } from "@/hooks/useMerchant";
 import { SaleBanner } from "@/components/shared/SaleBanner";
+import { useHomeContent } from "@/features/homepage/home-content";
+import { commerceService } from "@/commerce";
+import {
+  EditorialProduct,
+  selectEditorialProducts,
+} from "@/features/homepage/EditorialSections";
 export function Header() {
-  const { data: merchant } = useMerchant();
-  const [managedOpen, setManagedOpen] = useState("");
-  const [navHover, setNavHover] = useState(false);
-  const managedNav = merchant.menus.filter(
-    (m) =>
-      !m.parentId &&
-      !m.hidden &&
-      !merchant.categories.find((c) => c.id === m.categoryId)?.hidden,
-  );
+  const { data: merchant } = useMerchant(),
+    home = useHomeContent(),
+    configuration = home.id("header");
   const {
     currency,
     setCurrency,
@@ -31,77 +28,77 @@ export function Header() {
     setIsSearchOpen,
     session,
   } = useStore();
-
-  const [activeMegaMenu, setActiveMegaMenu] = useState<
-    "shop" | "14k-gold" | "earrings" | null
-  >(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pathname = usePathname();
-  const managedChildren = merchant.menus.filter(
+  const [open, setOpen] = useState(false),
+    [navHover, setNavHover] = useState(false),
+    [selected, setSelected] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false),
+    [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null),
+    pathname = usePathname();
+  const visible = merchant.menus.filter(
     (m) =>
-      m.parentId === managedOpen &&
       !m.hidden &&
       !merchant.categories.find((c) => c.id === m.categoryId)?.hidden,
   );
+  const menus = merchant.menuPublished
+    ? visible.filter((m) => !m.parentId)
+    : MAIN_NAV_ITEMS.map((m, i) => ({ ...m, id: String(i) }));
+  const current =
+    menus.find((m) => m.id === selected) ||
+    menus.find((m) => m.label.toLowerCase() === "rings") ||
+    menus[0];
+  const children = visible.filter((m) => m.parentId === current?.id);
+  const top = configuration.items || [];
+  const products = commerceService.catalog.getAllProducts();
+  const matches = selectEditorialProducts(
+    {
+      ...configuration,
+      collection:
+        configuration.collection && configuration.collection !== "all"
+          ? configuration.collection
+          : current?.href.split("/").pop(),
+    },
+    products,
+    2,
+  );
+  const featured = matches.length
+    ? matches
+    : products.filter((p) => p.isFeatured).slice(0, 2);
   function cancelMenuClose() {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = null;
+    if (timer.current) clearTimeout(timer.current);
   }
   function closeMenu() {
     cancelMenuClose();
-    setActiveMegaMenu(null);
-    setManagedOpen("");
+    setOpen(false);
     setNavHover(false);
   }
   function scheduleMenuClose() {
     cancelMenuClose();
-    closeTimer.current = setTimeout(() => {
-      setActiveMegaMenu(null);
-      setManagedOpen("");
-      setNavHover(false);
-    }, 180);
+    timer.current = setTimeout(closeMenu, 200);
   }
   useEffect(() => {
-    setActiveMegaMenu(null);
+    setOpen(false);
+    setNavHover(false);
     setIsMobileMenuOpen(false);
     setIsCurrencyOpen(false);
     return () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
+      if (timer.current) clearTimeout(timer.current);
     };
   }, [pathname]);
   useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 1024px)");
-    const handleResize = () => {
-      if (!desktop.matches) setActiveMegaMenu(null);
-      else setIsMobileMenuOpen(false);
-    };
-    desktop.addEventListener("change", handleResize);
-    return () => desktop.removeEventListener("change", handleResize);
-  }, []);
-
-  // Close menus on Escape key
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
+    const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setManagedOpen("");
-        setNavHover(false);
-        setActiveMegaMenu(null);
-        setIsCurrencyOpen(false);
+        closeMenu();
         setIsMobileMenuOpen(false);
+        setIsCurrencyOpen(false);
       }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
-
   return (
     <>
-      {(activeMegaMenu ||
-        (merchant.menuPublished &&
-          managedOpen &&
-          managedChildren.length > 0)) && (
+      {open && (
         <button
           className="mega-backdrop"
           tabIndex={-1}
@@ -111,103 +108,67 @@ export function Header() {
         />
       )}
       <header
-        className="sticky top-0 z-40 bg-white border-b border-[#EAE6E4]"
+        className="store-editorial-header sticky top-0 z-40 bg-white border-b border-[#EAE6E4]"
         onPointerEnter={cancelMenuClose}
-        onPointerLeave={() => {
-          scheduleMenuClose();
-          setNavHover(false);
-          setManagedOpen("");
-        }}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null))
-            scheduleMenuClose();
+        onPointerLeave={scheduleMenuClose}
+        onBlurCapture={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) scheduleMenuClose();
         }}
       >
-        <div className="store-header-inner mx-auto px-4 sm:px-6 lg:px-[60px] h-[68px] flex items-center justify-between gap-4">
-          {/* Left: Mobile Menu Trigger + Brand Wordmark */}
+        <div className="store-header-inner editorial-header-inner">
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-1.5 text-[#292929] hover:text-[#777777]"
+              className="lg:hidden p-1.5"
               aria-label="Open menu"
             >
-              <Menu className="w-5 h-5 stroke-[1.5]" />
+              <Menu size={21} />
             </button>
-
             <Link
               href="/"
-              className="brand-wordmark font-serif text-[30px] sm:text-[34px] tracking-[-0.02em] text-[#292929] whitespace-nowrap shrink-0 leading-none"
+              className="brand-wordmark font-serif text-[34px] leading-none"
             >
               J&amp;CO.
             </Link>
           </div>
-
-          {/* Center: Desktop Single-Line Navigation Links */}
           <nav
-            className="hidden lg:flex flex-1 min-w-0 ml-5 items-center gap-5 xl:gap-8 overflow-x-auto no-scrollbar py-2 mask-fade-right"
+            className="editorial-primary-nav"
             aria-label="Primary store navigation"
             onPointerEnter={() => setNavHover(true)}
             onFocusCapture={() => setNavHover(true)}
           >
-            {(merchant.menuPublished ? managedNav : MAIN_NAV_ITEMS).map(
-              (item) => {
-                const megaMenuType =
-                  "megaMenuType" in item ? item.megaMenuType : undefined;
-                const managedItem = "id" in item ? item : undefined;
-                const hasMega = merchant.menuPublished
-                  ? merchant.menus.some((m) => m.parentId === managedItem?.id)
-                  : Boolean(megaMenuType);
-                const isActive =
-                  hasMega &&
-                  (merchant.menuPublished
-                    ? managedOpen === managedItem?.id
-                    : activeMegaMenu === megaMenuType);
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onPointerEnter={() => {
-                      cancelMenuClose();
-                      setActiveMegaMenu(megaMenuType || null);
-                      if (managedItem) setManagedOpen(managedItem.id);
-                    }}
-                    onFocus={() => {
-                      cancelMenuClose();
-                      setActiveMegaMenu(megaMenuType || null);
-                      if (managedItem) setManagedOpen(managedItem.id);
-                    }}
-                    onClick={closeMenu}
-                    onKeyDown={(event) => {
-                      if (hasMega && event.key === "ArrowDown") {
-                        event.preventDefault();
-                        cancelMenuClose();
-                        setActiveMegaMenu(megaMenuType || null);
-                        if (managedItem) setManagedOpen(managedItem.id);
-                        requestAnimationFrame(() =>
-                          document
-                            .querySelector<HTMLAnchorElement>(
-                              "#store-mega-menu a",
-                            )
-                            ?.focus(),
-                        );
-                      }
-                    }}
-                    aria-expanded={hasMega ? isActive : undefined}
-                    aria-controls={hasMega ? "store-mega-menu" : undefined}
-                    className={`text-[13px] whitespace-nowrap shrink-0 transition-colors py-1 border-b ${
-                      isActive
-                        ? "text-[#292929] border-[#292929] font-medium"
-                        : "text-[#292929] border-transparent hover:text-[#777777]"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              },
-            )}
+            {top.map((item, i) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                onPointerEnter={() => {
+                  cancelMenuClose();
+                  setOpen(i === 0);
+                }}
+                onFocus={() => {
+                  cancelMenuClose();
+                  setOpen(i === 0);
+                }}
+                onClick={closeMenu}
+                aria-expanded={i === 0 ? open : undefined}
+                aria-controls={i === 0 ? "store-mega-menu" : undefined}
+                onKeyDown={(e) => {
+                  if (i === 0 && e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setOpen(true);
+                    requestAnimationFrame(() =>
+                      document
+                        .querySelector<HTMLAnchorElement>("#store-mega-menu a")
+                        ?.focus(),
+                    );
+                  }
+                }}
+              >
+                {item.title}
+              </Link>
+            ))}
           </nav>
-
           {/* Right: Currency + Search + Account + Bag */}
           <div
             className="flex items-center gap-3.5 sm:gap-5 shrink-0"
@@ -303,43 +264,76 @@ export function Header() {
           </div>
         </div>
 
-        {/* Desktop Mega Menu */}
-        <SaleBanner campaign={merchant.campaign} hovered={navHover} />
-        {!merchant.menuPublished && (
-          <MegaMenu activeMenu={activeMegaMenu} onClose={closeMenu} />
-        )}
-        {merchant.menuPublished &&
-          managedOpen &&
-          merchant.menus.some((m) => m.parentId === managedOpen) && (
-            <div
-              id="store-mega-menu"
-              className="managed-header-dropdown"
-              onMouseEnter={() => setManagedOpen(managedOpen)}
+        <SaleBanner campaign={merchant.campaign} hovered={navHover || open} />
+        {open && (
+          <div
+            id="store-mega-menu"
+            className="editorial-shop-menu"
+            onPointerEnter={() => {
+              cancelMenuClose();
+              setNavHover(true);
+            }}
+          >
+            <nav
+              className="editorial-menu-categories"
+              aria-label="Shop categories"
             >
-              {Array.from(
-                new Set(managedChildren.map((m) => m.group || "Explore")),
-              ).map((group) => (
-                <div className="managed-header-group" key={group}>
-                  <h3>
-                    {group
-                      .replace(/Col\d/gi, "")
-                      .replace(/([a-z])([A-Z])/g, "$1 $2")
-                      .trim()}
-                  </h3>
-                  {managedChildren
-                    .filter((m) => (m.group || "Explore") === group)
-                    .map((m) => (
-                      <Link key={m.id} href={m.href} onClick={closeMenu}>
-                        {m.image && <img src={m.image} alt="" />}
-                        {m.label}
-                      </Link>
-                    ))}
-                </div>
+              {menus.map((m) => (
+                <Link
+                  key={m.id}
+                  href={m.href}
+                  className={current?.id === m.id ? "selected" : ""}
+                  onPointerEnter={() => setSelected(m.id)}
+                  onFocus={() => setSelected(m.id)}
+                  onClick={closeMenu}
+                >
+                  {m.label}
+                </Link>
+              ))}
+            </nav>
+            <nav
+              className="editorial-menu-subcategories"
+              aria-label={current?.label + " collections"}
+            >
+              <Link
+                href={current?.href || "/collections/shop-all"}
+                onClick={closeMenu}
+              >
+                ALL {current?.label.toUpperCase()}
+              </Link>
+              {children.map((m) => (
+                <Link key={m.id} href={m.href} onClick={closeMenu}>
+                  {m.label}
+                </Link>
+              ))}
+              {!children.length &&
+                merchant.categories
+                  .filter(
+                    (c) =>
+                      !c.hidden &&
+                      c.parentId ===
+                        merchant.categories.find((c) =>
+                          current?.href.endsWith("/" + c.slug),
+                        )?.id &&
+                      !!c.parentId,
+                  )
+                  .map((c) => (
+                    <Link
+                      key={c.id}
+                      href={"/collections/" + c.slug}
+                      onClick={closeMenu}
+                    >
+                      {c.name}
+                    </Link>
+                  ))}
+            </nav>
+            <div className="editorial-menu-products" onClick={closeMenu}>
+              {featured.map((p) => (
+                <EditorialProduct key={p.id} product={p} />
               ))}
             </div>
-          )}
-
-        {/* Mobile Navigation Drawer */}
+          </div>
+        )}
         <MobileNavDrawer
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}

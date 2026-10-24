@@ -2,6 +2,8 @@ export const INFORMATION_PAGES: Record<
   string,
   { title: string; intro: string; sections: { title: string; body: string }[] }
 > = {
+  "our-story": {title:"Everyday, a little more special.",intro:"Welcome to the world of J&CO. Thoughtful jewellery, worn your way.",sections:[{title:"Small details. Personal stories.",body:"From delicate huggies to statement rings and personalized necklaces, explore pieces that bring a little brilliance to your everyday."},{title:"Find your signature",body:"Discover gold, silver and sparkling details in our collections. Each product page explains its materials, finishes, dimensions and care, so you can choose the piece that feels like you."},{title:"A thoughtful gift",body:"Choose something meaningful for someone special, or a little something for yourself. Explore personalized pieces and add a gift note at checkout."}]},
+  "our-community": {title:"Jewellery, worn your way.",intro:"A collection of everyday moments and individual style.",sections:[{title:"Share the sparkle",body:"Find styling inspiration in our homepage gallery and explore @jcojewellery on Instagram. Discover ways to layer necklaces, mix finishes and build an ear stack that feels like you."},{title:"Your personal edit",body:"Save your favourite pieces to your wishlist and return to them from your account. Follow the homepage collection links to discover more."},{title:"Stay in the loop",body:"Sign up using the homepage community form or footer to save your newsletter preference in this browser preview. Email delivery will be connected in a future backend phase."}]},
   faq: {
     title: "Frequently asked questions",
     intro: "A little help, whenever you need it.",

@@ -1,5 +1,6 @@
 "use client";
-import {previewServices} from "@/commerce/browser-services";
+import { EditorialSettings, EDITORIAL_BLOCKS } from "./EditorialSettings";
+import { previewServices } from "@/commerce/browser-services";
 import { useEffect, useState } from "react";
 import {
   Save,
@@ -13,20 +14,19 @@ import {
   ArrowUp,
 } from "lucide-react";
 import { useMerchant } from "@/hooks/useMerchant";
+import { HomeBlock, merchantProducts } from "@/lib/merchant-store";
 import {
-  changeMerchant,
-  HomeBlock,
-  readMedia,
-  merchantProducts,
-} from "@/lib/merchant-store";
-import { HOME_BLOCKS, HomeEditContext } from "@/features/homepage/home-content";
+  HOME_BLOCKS,
+  HomeEditContext,
+  HomeSection,
+  mergeHomeBlocks,
+} from "@/features/homepage/home-content";
+import { Header } from "@/components/layout/Header";
 import { HomepageView } from "@/features/homepage/HomepageView";
 import { Panel, Field } from "./admin-shared";
 export function HomepageManager() {
   const { data } = useMerchant();
-  const [blocks, setBlocks] = useState<HomeBlock[]>(
-    HOME_BLOCKS.map((b) => ({ ...b, ...data.home.find((x) => x.id === b.id) })),
-  );
+  const [blocks, setBlocks] = useState<HomeBlock[]>(mergeHomeBlocks(data.home));
   const [marquee, setMarquee] = useState(data.marquee);
   const [selected, setSelected] = useState("hero");
   const [mobile, setMobile] = useState(false);
@@ -45,13 +45,8 @@ export function HomepageManager() {
   }
   const block = blocks.find((b) => b.id === selected)!;
   const dirty =
-    JSON.stringify(blocks) !==
-      JSON.stringify(
-        HOME_BLOCKS.map((b) => ({
-          ...b,
-          ...data.home.find((x) => x.id === b.id),
-        })),
-      ) || JSON.stringify(marquee) !== JSON.stringify(data.marquee);
+    JSON.stringify(blocks) !== JSON.stringify(mergeHomeBlocks(data.home)) ||
+    JSON.stringify(marquee) !== JSON.stringify(data.marquee);
   useEffect(() => {
     const warn = (e: Event) => {
       if (dirty && !window.confirm("Discard unpublished homepage changes?"))
@@ -85,9 +80,21 @@ export function HomepageManager() {
   async function publish() {
     setBusy(true);
     try {
-      if (blocks.some((b) => b.href && !b.href.startsWith("/")))
+      if (
+        blocks.some(
+          (b) =>
+            (b.href && !b.href.startsWith("/")) ||
+            (b.secondaryHref && !b.secondaryHref.startsWith("/")) ||
+            b.items?.some(
+              (item) =>
+                !item.href.startsWith("/") ||
+                !item.title.trim() ||
+                (["hero", "lifestyle"].includes(b.id) && !item.media),
+            ),
+        )
+      )
         throw new Error(
-          "Use a storefront path beginning with / for section links.",
+          "Give every story a title, image and storefront destination beginning with /.",
         );
       const publishedBlocks = blocks.map((b) => ({
         ...b,
@@ -97,7 +104,10 @@ export function HomepageManager() {
             ? new Date().toISOString()
             : b.updatedAt,
       }));
-      await previewServices.content.publishHome({home:publishedBlocks,marquee});
+      await previewServices.content.publishHome({
+        home: publishedBlocks,
+        marquee,
+      });
       setBlocks(publishedBlocks);
       setUndoStack([]);
       setNotice("Homepage published. Your storefront now uses these sections.");
@@ -153,12 +163,7 @@ export function HomepageManager() {
             className="studio-button secondary"
             onClick={() => {
               if (window.confirm("Reset unpublished changes?")) {
-                setBlocks(
-                  HOME_BLOCKS.map((b) => ({
-                    ...b,
-                    ...data.home.find((x) => x.id === b.id),
-                  })),
-                );
+                setBlocks(mergeHomeBlocks(data.home));
                 setMarquee(data.marquee);
               }
             }}
@@ -190,6 +195,9 @@ export function HomepageManager() {
           <HomeEditContext.Provider
             value={{ blocks, marquee, onSelect: setSelected }}
           >
+            <HomeSection id="header">
+              <Header />
+            </HomeSection>
             <HomepageView />
           </HomeEditContext.Provider>
         </div>
@@ -209,7 +217,13 @@ export function HomepageManager() {
                 </select>
               </Field>
               <h3>{block.label}</h3>
-              {["new-arrivals", "best-sellers"].includes(selected) ? (
+              {EDITORIAL_BLOCKS.includes(selected) ? (
+                <EditorialSettings
+                  block={block}
+                  patch={patch}
+                  onError={setError}
+                />
+              ) : ["new-arrivals", "best-sellers"].includes(selected) ? (
                 <>
                   <Field label="Product selection">
                     <select

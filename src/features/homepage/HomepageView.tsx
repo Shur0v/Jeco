@@ -1,18 +1,21 @@
 "use client";
+import {
+  EditorialHero,
+  ExploreCollection,
+  LifestyleRail,
+  SignatureMatrix,
+  CommunityCollage,
+} from "./EditorialSections";
 import { InfiniteMarquee } from "./InfiniteMarquee";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { HomeSection, HomeMedia, useHomeContent } from "./home-content";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { commerceService } from "@/commerce";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { ReviewsSection } from "@/features/reviews/ReviewsSection";
-import {
-  editorialPhotos as photos,
-  getEditorialBannerSvg,
-  getProductStudioSvg,
-} from "@/lib/artwork";
+import { editorialPhotos as photos } from "@/lib/artwork";
 import { useStore } from "@/hooks/useStore";
 import { Product } from "@/types/commerce";
 
@@ -92,20 +95,6 @@ function ProductRow({
 
 export function HomepageView() {
   const home = useHomeContent();
-  const [slide, setSlide] = useState(0);
-  const heroSlides = [home.id("hero").media, ...(home.id("hero").slides || [])];
-  useEffect(() => {
-    if (
-      heroSlides.length < 2 ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    )
-      return;
-    const timer = setInterval(
-      () => setSlide((s) => (s + 1) % heroSlides.length),
-      6000,
-    );
-    return () => clearInterval(timer);
-  }, [heroSlides.length]);
   const { isHydrated } = useStore();
   const all = useMemo(
     () => commerceService.catalog.getAllProducts(),
@@ -121,33 +110,9 @@ export function HomepageView() {
     ["RINGS", "rings", photos.rings],
     ["PERSONALIZED", "personalized", photos.personalized],
   ];
-  const heart = all.find((p) => p.visualSpec.shape === "pave-heart-flatback")!;
   return (
     <div className="home-page">
-      <HomeSection id="hero" className="campaign-hero">
-        <Link href={home.id("hero").href} aria-label="Find your flatbacks">
-          <HomeMedia
-            block={{
-              ...home.id("hero"),
-              media: heroSlides[slide] || heroSlides[0],
-            }}
-          />
-        </Link>
-        {heroSlides.length > 1 && (
-          <div className="home-slide-controls">
-            {heroSlides.map((_, i) => (
-              <button
-                aria-label={`Hero slide ${i + 1}`}
-                aria-pressed={slide === i}
-                key={i}
-                onClick={() => setSlide(i)}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
-      </HomeSection>
+      <EditorialHero products={all} />
       <HomeSection id="categories" className="home-category">
         <h2>CATEGORY</h2>
         <div className="category-grid">
@@ -163,6 +128,8 @@ export function HomepageView() {
           ))}
         </div>
       </HomeSection>
+      <ExploreCollection products={all} />
+      <LifestyleRail />
       <section className="home-gifting">
         <h2>GIFTING</h2>
         <div className="gifting-grid">
@@ -196,13 +163,18 @@ export function HomepageView() {
           href="/collections/new-arrivals"
         />
       </HomeSection>
+      <SignatureMatrix products={all} />
       <HomeSection className="heart-spotlight" id="above-marquee">
         <Link href={home.id("above-marquee").href}>
           <HomeMedia block={home.id("above-marquee")} />
         </Link>
       </HomeSection>
       <HomeSection id="marquee">
-        <InfiniteMarquee messages={home.data.marquee.messages} speed={home.data.marquee.speed} direction={home.data.marquee.direction} />
+        <InfiniteMarquee
+          messages={home.data.marquee.messages}
+          speed={home.data.marquee.speed}
+          direction={home.data.marquee.direction}
+        />
       </HomeSection>
       <HomeSection id="below-marquee">
         <Link
@@ -263,32 +235,7 @@ export function HomepageView() {
         </Link>
       </HomeSection>
       <ReviewsSection />
-      <HomeSection id="gallery" className="sparkle-gallery">
-        <div className="section-heading">
-          <h2>SHARE THE SPARKLE</h2>
-          <a
-            href="https://www.instagram.com/jcojewellery/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            @JCOJEWELLERY
-          </a>
-        </div>
-        <div>
-          {(home.id("gallery").slides || []).map((image, i) => (
-            <Link
-              href={`/collections/${categories[i % categories.length][1]}`}
-              key={i}
-            >
-              <img
-                src={image}
-                alt={`Shop our community favourites ${i + 1}`}
-                loading="lazy"
-              />
-            </Link>
-          ))}
-        </div>
-      </HomeSection>
+      <CommunityCollage />
     </div>
   );
 }
