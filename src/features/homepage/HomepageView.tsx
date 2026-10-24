@@ -6,6 +6,7 @@ import {
   SignatureMatrix,
   CommunityCollage,
 } from "./EditorialSections";
+import { MainHero } from "./MainHero";
 import { InfiniteMarquee } from "./InfiniteMarquee";
 
 import { useMemo, useState } from "react";
@@ -14,7 +15,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { commerceService } from "@/commerce";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { ReviewsSection } from "@/features/reviews/ReviewsSection";
+
 import { editorialPhotos as photos } from "@/lib/artwork";
 import { useStore } from "@/hooks/useStore";
 import { Product } from "@/types/commerce";
@@ -112,7 +113,7 @@ export function HomepageView() {
   ];
   return (
     <div className="home-page">
-      <EditorialHero products={all} />
+      <MainHero />
       <HomeSection id="categories" className="home-category">
         <h2>CATEGORY</h2>
         <div className="category-grid">
@@ -204,19 +205,7 @@ export function HomepageView() {
           href="/collections/best-sellers"
         />
       </HomeSection>
-      <HomeSection id="personalized">
-        <Link
-          href={home.id("personalized").href}
-          className="personalized-campaign"
-        >
-          <HomeMedia block={home.id("personalized")} />
-          <div>
-            <h2>{home.id("personalized").title}</h2>
-            <p>{home.id("personalized").text}</p>
-            <span className="white-cta">SHOP NOW</span>
-          </div>
-        </Link>
-      </HomeSection>
+      <EditorialHero products={all} />
       <HomeSection className="unboxing" id="unboxing">
         <div className="section-heading">
           <div>
@@ -234,7 +223,6 @@ export function HomepageView() {
           <HomeMedia block={home.id("unboxing")} />
         </Link>
       </HomeSection>
-      <ReviewsSection />
       <CommunityCollage />
     </div>
   );

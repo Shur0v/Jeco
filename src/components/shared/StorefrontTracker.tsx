@@ -30,7 +30,7 @@ export function StorefrontTracker() {
       const el = event.target instanceof Element ? event.target : null;
       if (
         !el ||
-        !!el.closest('[data-no-track], [data-private-content]') || (!!el.closest('form') && !el.closest('[data-track-control]')) ||
+        !!el.closest('[data-no-track], [data-private-content], [data-drag-click]') || (!!el.closest('form') && !el.closest('[data-track-control]')) ||
         el.closest(
           '[data-no-track],input,textarea,select,[contenteditable="true"]',
         )

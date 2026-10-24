@@ -278,8 +278,7 @@ class MockReviewService implements IReviewService {
   getReviewsForProduct(productId?: string) {
     if (!productId) return MOCK_REVIEWS;
     const exact = MOCK_REVIEWS.filter((r) => r.productId === productId);
-    const others = MOCK_REVIEWS.filter((r) => r.productId !== productId);
-    return [...exact, ...others];
+    return exact;
   }
 
   getAllReviews() {

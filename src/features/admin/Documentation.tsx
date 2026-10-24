@@ -94,11 +94,11 @@ const topics = [
       ],
       [
         "Build a slider",
-        "Choose Main hero. Each story has its own title, description, desktop/mobile image, alt text, destination and button. Pick up to two products per story or use automatic suggestions. Reorder stories with arrows, set the interval (4–60 seconds), then test the numbered selector, arrows and pause control. Autoplay pauses on hover/focus and respects reduced motion.",
+        "Choose Main hero for the full-width image slider. Edit each image, mobile crop, heading, copy, destination and CTA. Reorder slides and set the interval (4–60 seconds). Test automatic changes, numbered pagination, previous/next and pause/play; reduced motion disables autoplay. Personalized is now the separate split editorial showcase below Best sellers; its own images, stories and two featured product choices are independently editable.",
       ],
       [
         "Set product rows",
-        "Explore jewellery shows four pieces; Signature collection shows up to sixteen. Select a collection slug for automatic products or choose products manually in the desired order. Edit the matrix family/setting labels and button. New arrivals and best sellers keep their existing independent flag-based/manual selection.",
+        "Explore jewellery shows four pieces at a time on desktop with more available by mouse dragging or touch scrolling (up to sixteen). The lifestyle rail also supports mouse dragging and its existing arrow controls. A drag never opens a card; a normal click still does. Signature collection shows up to sixteen. Select a collection slug for automatic products or choose products manually in the desired order. Edit the matrix family/setting labels and button. New arrivals and best sellers keep their existing independent flag-based/manual selection.",
       ],
       [
         "Tune the marquee",

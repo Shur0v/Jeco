@@ -122,7 +122,7 @@ export const HOME_BLOCKS: HomeBlock[] = [
   },
   {
     id: "hero",
-    label: "Main hero",
+    label: "Main hero · full-width image slider",
     media: photos.hero,
     alt: "Everyday jewellery",
     href: "/collections/flatback",
@@ -136,7 +136,7 @@ export const HOME_BLOCKS: HomeBlock[] = [
         id: "everyday",
         title: "Your everyday, elevated.",
         text: "Little luxuries for every version of you. Meet the pieces you will never want to take off.",
-        media: photos.demi,
+        media: getEditorialBannerSvg("shop-all-hero"),
         alt: "Everyday gold earrings styled on a model",
         href: "/collections/earrings",
         buttonLabel: "EXPLORE EARRINGS",
@@ -227,7 +227,20 @@ export const HOME_BLOCKS: HomeBlock[] = [
   },
   {
     id: "personalized",
-    label: "Personalized campaign",
+    label: "Personalized · split editorial showcase",
+    buttonLabel: "MAKE IT PERSONAL",
+    collection: "personalized",
+    items: [
+      {
+        id: "personalized-story",
+        title: "Make it unmistakably yours.",
+        text: "Letters, layers and thoughtful gifts. Jewellery with a meaning only you can give it.",
+        media: photos.personalizedBanner,
+        alt: "Personalized initial necklaces",
+        href: "/collections/personalized",
+        buttonLabel: "MAKE IT PERSONAL",
+      },
+    ],
     media: photos.personalizedBanner,
     alt: "Personalized initial necklaces",
     title: "PERSONALIZED",
@@ -291,7 +304,19 @@ export const HOME_BLOCKS: HomeBlock[] = [
   })),
 ];
 export const mergeHomeBlocks = (saved: HomeBlock[]) =>
-  mergeEditorialBlocks(HOME_BLOCKS, saved);
+  mergeEditorialBlocks(HOME_BLOCKS, saved).map((block) =>
+    block.id === "hero"
+      ? {
+          ...block,
+          items: block.items?.map((item) =>
+            item.media === photos.hero ||
+            (item.id === "everyday" && item.media === photos.demi)
+              ? { ...item, media: getEditorialBannerSvg("shop-all-hero") }
+              : item,
+          ),
+        }
+      : block,
+  );
 export const HomeEditContext = createContext<{
   blocks: HomeBlock[];
   marquee?: { messages: string[]; speed: number; direction: "left" | "right" };

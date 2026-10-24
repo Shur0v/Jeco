@@ -103,3 +103,18 @@ describe("editorial publishing and compatibility", () => {
     ).toEqual(["a"]);
   });
 });
+
+it("preserves old personalized artwork when upgrading it to a split showcase", () => {
+  const base = { ...hero, id: "personalized" };
+  const saved = {
+    ...base,
+    items: undefined,
+    media: "/my-personalized.webp",
+    title: "My personal edit",
+    productIds: ["my-product"],
+  };
+  const result = mergeEditorialBlocks([base], [saved])[0];
+  expect(result.items?.[0].media).toBe("/my-personalized.webp");
+  expect(result.items?.[0].title).toBe("My personal edit");
+  expect(result.productIds).toEqual(["my-product"]);
+});

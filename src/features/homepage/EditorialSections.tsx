@@ -1,4 +1,5 @@
 "use client";
+import { useDragScroll } from "@/hooks/useDragScroll";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -53,7 +54,7 @@ export function EditorialProduct({
 }
 export function EditorialHero({ products }: { products: Product[] }) {
   const home = useHomeContent(),
-    block = home.id("hero");
+    block = home.id("personalized");
   const slides = block.items?.length
     ? block.items
     : [
@@ -114,7 +115,7 @@ export function EditorialHero({ products }: { products: Product[] }) {
   const move = (delta: number) =>
     setIndex((i) => (i + delta + slides.length) % slides.length);
   return (
-    <HomeSection id="hero" className="editorial-hero">
+    <HomeSection id="personalized" className="editorial-hero">
       <section
         aria-roledescription="carousel"
         aria-label="Jewellery stories"
@@ -146,7 +147,7 @@ export function EditorialHero({ products }: { products: Product[] }) {
               block={{
                 ...block,
                 ...current,
-                id: "hero",
+                id: "personalized",
                 mediaType:
                   current.media === block.media ? block.mediaType : "image",
               }}
@@ -157,7 +158,7 @@ export function EditorialHero({ products }: { products: Product[] }) {
               <p className="editorial-eyebrow">
                 {block.eyebrow || "THE WORLD OF J&CO."}
               </p>
-              <h1>{current.title}</h1>
+              <h2>{current.title}</h2>
               <p>{current.text}</p>
             </div>
             <div className="editorial-hero-products">
@@ -208,6 +209,7 @@ export function EditorialHero({ products }: { products: Product[] }) {
 }
 export function ExploreCollection({ products }: { products: Product[] }) {
   const b = useHomeContent().id("explore");
+  const drag = useDragScroll();
   // Four different jewellery families make the automatic collection useful from day one.
   const automatic = ["rings", "necklaces", "earrings", "bracelets"]
     .map((category) =>
@@ -218,8 +220,13 @@ export function ExploreCollection({ products }: { products: Product[] }) {
     .filter((p): p is Product => !!p);
   const selected =
     b.productIds?.length || b.collection !== "all"
-      ? selectEditorialProducts(b, products, 4)
-      : automatic;
+      ? selectEditorialProducts(b, products, 16)
+      : [
+          ...automatic,
+          ...products
+            .filter((p) => !automatic.some((a) => a.id === p.id))
+            .slice(0, 12),
+        ];
   return (
     <HomeSection id="explore" className="editorial-explore">
       <div className="editorial-section-intro">
@@ -235,7 +242,13 @@ export function ExploreCollection({ products }: { products: Product[] }) {
           </Link>
         )}
       </div>
-      <div className="editorial-four-grid">
+      <div
+        className="editorial-four-grid"
+        ref={drag.ref}
+        {...drag.handlers}
+        data-dragging={drag.dragging || undefined}
+        aria-label="Explore jewellery products"
+      >
         {selected.map((p) => (
           <EditorialProduct key={p.id} product={p} />
         ))}
@@ -245,7 +258,8 @@ export function ExploreCollection({ products }: { products: Product[] }) {
 }
 export function LifestyleRail() {
   const b = useHomeContent().id("lifestyle"),
-    rail = useRef<HTMLDivElement>(null);
+    drag = useDragScroll();
+  const rail = drag.ref;
   const cards = b.items?.length
     ? b.items
     : (b.slides || []).map((media, i) => ({
@@ -261,7 +275,12 @@ export function LifestyleRail() {
         <h2>{b.title}</h2>
         <p>{b.text}</p>
       </div>
-      <div className="editorial-lifestyle-rail" ref={rail}>
+      <div
+        className="editorial-lifestyle-rail"
+        ref={rail}
+        {...drag.handlers}
+        data-dragging={drag.dragging || undefined}
+      >
         {cards.map((c) => (
           <Link key={c.id} href={c.href} className="editorial-lifestyle-card">
             <img

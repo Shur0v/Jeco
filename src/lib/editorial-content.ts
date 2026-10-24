@@ -30,7 +30,12 @@ export function mergeEditorialBlocks(
   return defaults.map((base) => {
     const previous = saved.find((b) => b.id === base.id),
       result = { ...base, ...previous };
-    if (base.id === "hero" && previous && !previous.items && base.items) {
+    if (
+      ["hero", "personalized"].includes(base.id) &&
+      previous &&
+      !previous.items &&
+      base.items
+    ) {
       result.items = [
         {
           ...base.items[0],
@@ -77,7 +82,10 @@ export function validateEditorialBlocks(blocks: HomeBlock[]) {
           throw new Error(
             "Give every item a title and local storefront destination.",
           );
-        if (["hero", "lifestyle"].includes(b.id) && !item.media.trim())
+        if (
+          ["hero", "personalized", "lifestyle"].includes(b.id) &&
+          !item.media.trim()
+        )
           throw new Error("Choose an image for every story.");
       }
     }

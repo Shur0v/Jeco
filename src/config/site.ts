@@ -158,6 +158,6 @@ export const FOOTER_LINKS = {
     { label: 'Our Story', href: '/#story' },
     { label: 'Our Handmade Products', href: '/collections/handmade' },
     { label: 'Visit our Showroom', href: '/#showroom' },
-    { label: 'Our Community', href: '/#reviews' },
+    { label: 'Our Community', href: '/pages/our-community' },
   ],
 };

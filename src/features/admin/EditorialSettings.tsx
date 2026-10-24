@@ -7,6 +7,7 @@ import { Field } from "./admin-shared";
 
 export const EDITORIAL_BLOCKS = [
   "hero",
+  "personalized",
   "header",
   "explore",
   "lifestyle",
@@ -24,10 +25,15 @@ export function EditorialSettings({
 }) {
   const products = merchantProducts(),
     [uploading, setUploading] = useState(false);
-  const isItems = ["hero", "header", "lifestyle"].includes(block.id),
-    isProducts = ["hero", "header", "explore", "collection-matrix"].includes(
+  const isItems = ["hero", "personalized", "header", "lifestyle"].includes(
       block.id,
-    );
+    ),
+    isProducts = [
+      "personalized",
+      "header",
+      "explore",
+      "collection-matrix",
+    ].includes(block.id);
   const updateItem = (
     index: number,
     values: Partial<NonNullable<HomeBlock["items"]>[number]>,
@@ -96,7 +102,7 @@ export function EditorialSettings({
           </Field>
         </>
       )}
-      {block.id === "hero" && (
+      {["hero", "personalized"].includes(block.id) && (
         <>
           <Field label="Story interval (seconds)">
             <input
@@ -210,9 +216,9 @@ export function EditorialSettings({
             </div>
           )}
           <p className="studio-caption">
-            Selected order is preserved. Hero/menu show 2, Explore shows 4, and
-            the signature grid shows up to 16. Unpublished products are never
-            displayed publicly.
+            Selected order is preserved. Personalized/menu show 2, Explore shows
+            4 at a time (up to 16 draggable), and the signature grid shows up to
+            16. Unpublished products are never displayed publicly.
           </p>
         </>
       )}
@@ -222,7 +228,10 @@ export function EditorialSettings({
             <div key={item.id} className="studio-editorial-item">
               <header>
                 <strong>
-                  {block.id === "hero" ? "Story" : "Item"} {index + 1}
+                  {["hero", "personalized"].includes(block.id)
+                    ? "Story"
+                    : "Item"}{" "}
+                  {index + 1}
                 </strong>
                 <div className="studio-actions">
                   <button
@@ -310,7 +319,7 @@ export function EditorialSettings({
                       }
                     />
                   </Field>
-                  {block.id === "hero" && (
+                  {["hero", "personalized"].includes(block.id) && (
                     <>
                       <Field label="Mobile image">
                         <input
@@ -330,25 +339,27 @@ export function EditorialSettings({
                           }
                         />
                       </Field>
-                      <Field label="Featured products (two, optional)">
-                        <select
-                          multiple
-                          value={item.productIds || []}
-                          onChange={(e) =>
-                            updateItem(index, {
-                              productIds: Array.from(e.target.selectedOptions)
-                                .map((o) => o.value)
-                                .slice(0, 2),
-                            })
-                          }
-                        >
-                          {products.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
+                      {block.id === "personalized" && (
+                        <Field label="Featured products (two, optional)">
+                          <select
+                            multiple
+                            value={item.productIds || []}
+                            onChange={(e) =>
+                              updateItem(index, {
+                                productIds: Array.from(e.target.selectedOptions)
+                                  .map((o) => o.value)
+                                  .slice(0, 2),
+                              })
+                            }
+                          >
+                            {products.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                      )}
                     </>
                   )}
                 </>
@@ -380,7 +391,7 @@ export function EditorialSettings({
             }
           >
             <Plus size={16} />
-            Add {block.id === "hero" ? "story" : "item"}
+            Add {["hero", "personalized"].includes(block.id) ? "story" : "item"}
           </button>
           {uploading && <p role="status">Optimizing image…</p>}
         </>
