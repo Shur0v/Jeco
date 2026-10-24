@@ -1,4 +1,5 @@
 "use client";
+import { InfiniteMarquee } from "./InfiniteMarquee";
 
 import { useMemo, useState, useEffect } from "react";
 import { HomeSection, HomeMedia, useHomeContent } from "./home-content";
@@ -201,27 +202,7 @@ export function HomepageView() {
         </Link>
       </HomeSection>
       <HomeSection id="marquee">
-        <div
-          className="managed-marquee"
-          tabIndex={0}
-          aria-label="Our jewellery values"
-        >
-          <div
-            style={{
-              animationDuration: `${home.data.marquee.speed}s`,
-              animationDirection:
-                home.data.marquee.direction === "right" ? "reverse" : "normal",
-            }}
-          >
-            {[0, 1].map((n) => (
-              <div className="marquee-copy" key={n} aria-hidden={n === 1}>
-                {home.data.marquee.messages.map((text, i) => (
-                  <span key={i}>{text}</span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+        <InfiniteMarquee messages={home.data.marquee.messages} speed={home.data.marquee.speed} direction={home.data.marquee.direction} />
       </HomeSection>
       <HomeSection id="below-marquee">
         <Link

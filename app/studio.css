@@ -1865,6 +1865,11 @@
 }
 .marquee-copy {
   display: flex;
+  flex-shrink: 0;
+}
+.marquee-sequence {
+  display: flex;
+  flex-shrink: 0;
   gap: 54px;
   padding-right: 54px;
 }
@@ -2297,7 +2302,7 @@
   .managed-marquee {
     font-size: 9px;
   }
-  .marquee-copy {
+  .marquee-sequence {
     gap: 30px;
     padding-right: 30px;
   }
@@ -2311,11 +2316,13 @@
   .managed-marquee > div {
     width: 100%;
   }
-  .marquee-copy {
+  .marquee-copy,
+  .marquee-sequence {
     flex-wrap: wrap;
     justify-content: center;
   }
-  .marquee-copy[aria-hidden="true"] {
+  .marquee-copy[aria-hidden="true"],
+  .marquee-sequence[aria-hidden="true"] {
     display: none;
   }
   .merchant-studio * {
